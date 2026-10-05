@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Simulador acadèmic per practicar consultes i matrícules amb Power Automate Desktop.">
+  <title>CampusRPA | Simulació d'incidències</title>
+  <style>
+    :root {
+      --fons: #f3f6fa; --text: #172b3a; --secundari: #526578; --primari: #075b66;
+      --vora: #d7e1e9; --correcte: #166344; --avis: #805600; --error: #a52020;
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body { margin: 0; background: var(--fons); color: var(--text); font: 1rem/1.6 system-ui, sans-serif; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    a { color: var(--primari); }
+    :focus-visible { outline: 3px solid #187bda; outline-offset: 4px; }
+    .salt { position: absolute; left: 1rem; top: -5rem; background: white; padding: .7rem; z-index: 2; }
+    .salt:focus { top: 1rem; }
+    .capcalera { background: #103c48; color: white; }
+    .capcalera-interior, main, footer { max-width: 1080px; margin: auto; padding: 1.5rem; }
+    .capcalera-interior { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .marca { font-size: 1.3rem; font-weight: 800; letter-spacing: -.03em; }
+    .distintiu { font-size: .8rem; padding: .25rem .7rem; border: 1px solid #81a5af; border-radius: 2rem; }
+    main { padding-top: 2.5rem; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); line-height: 1.2; letter-spacing: -.04em; margin-bottom: .7rem; }
+    h2 { font-size: 1.25rem; margin-bottom: .4rem; }
+    h3 { font-size: 1rem; }
+    .subtitle { color: var(--secundari); max-width: 720px; margin-bottom: 2rem; }
+    .distribucio { display: grid; grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr); gap: 1.5rem; align-items: start; }
+    .targeta { background: white; border: 1px solid var(--vora); border-radius: 1rem; padding: 1.6rem; box-shadow: 0 6px 24px #172b3a06; }
+    .targeta + .targeta { margin-top: 1.5rem; }
+    .pas { color: var(--primari); font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; margin-bottom: .4rem; }
+    .ajuda { color: var(--secundari); font-size: .875rem; }
+    .grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 1rem; margin-top: 1.4rem; }
+    label { display: block; font-weight: 650; margin-bottom: .4rem; }
+    input { width: 100%; min-width: 0; padding: .75rem; border: 1px solid #93a6b5; border-radius: .5rem; color: var(--text); background: white; }
+    input[aria-invalid="true"] { border: 2px solid var(--error); }
+    .camp-ajuda, .camp-error { display: block; font-size: .8rem; margin-top: .4rem; }
+    .camp-ajuda { color: var(--secundari); }
+    .camp-error { color: var(--error); }
+    .boto { min-height: 46px; border: 0; border-radius: .5rem; padding: .7rem 1.1rem; background: var(--primari); color: white; font-weight: 700; }
+    .boto:hover:not(:disabled) { background: #03444d; }
+    .boto:disabled { opacity: .65; cursor: wait; }
+    .accions { display: flex; flex-wrap: wrap; gap: .8rem; align-items: center; margin-top: 1.2rem; }
+    .estat-consulta { font-size: .875rem; color: var(--secundari); }
+    .result { margin-top: 1.5rem; }
+    .dades { margin: 1rem 0; }
+    .row { display: grid; grid-template-columns: 1fr 1.3fr; gap: 1rem; padding: .65rem 0; border-bottom: 1px solid #e6edf2; }
+    .row dt { color: var(--secundari); }
+    .row dd { margin: 0; font-weight: 650; overflow-wrap: anywhere; }
+    .success { color: var(--correcte); }
+    .warning { color: var(--avis); }
+    .error { color: var(--error); }
+    .message { border-radius: .6rem; padding: .9rem 1rem; background: #edf3f7; overflow-wrap: anywhere; }
+    .message.success { background: #edf8f1; border-left: 4px solid var(--correcte); }
+    .message.warning { background: #fff8e5; border-left: 4px solid var(--avis); }
+    .message.error { background: #fff1ef; border-left: 4px solid var(--error); }
+    #enrollment-section { margin-top: 1.3rem; padding-top: 1.2rem; border-top: 1px solid var(--vora); }
+    .cataleg { list-style: none; padding: 0; margin: 1rem 0 0; }
+    .cataleg li { padding: .7rem 0; border-bottom: 1px solid #e6edf2; }
+    .cataleg li:last-child { border: 0; }
+    .cataleg strong, .cataleg span { display: block; }
+    .cataleg span { font-size: .8rem; color: var(--secundari); }
+    .casos { display: grid; gap: .65rem; margin-top: 1rem; }
+    .cas { width: 100%; text-align: left; padding: .75rem; border: 1px solid var(--vora); border-radius: .5rem; color: var(--text); background: #f8fafc; }
+    .cas:hover { border-color: var(--primari); background: #eff7f8; }
+    .cas strong, .cas span { display: block; }
+    .cas span { font-size: .8rem; color: var(--secundari); }
+    .incidencia { width: 100%; text-align: left; padding: .7rem; margin-top: .5rem;
+      border: 1px solid var(--vora); border-radius: .5rem; background: #f8fafc; color: var(--text); }
+    .incidencia[aria-pressed="true"] { border: 2px solid var(--avis); background: #fff8e5; font-weight: 700; }
+    .incidencia:disabled { opacity: .6; cursor: not-allowed; }
+    #simulation-status { margin-top: 1rem; }
+    footer { color: var(--secundari); font-size: .8rem; padding-top: .5rem; }
+    @media (max-width: 780px) { .distribucio { grid-template-columns: 1fr; } }
+    @media (max-width: 480px) {
+      .grid, .row { grid-template-columns: 1fr; gap: .3rem; }
+      .grid { gap: 1rem; }
+      .targeta { padding: 1.1rem; }
+      main, .capcalera-interior, footer { padding-left: 1rem; padding-right: 1rem; }
+      .boto { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+<a class="salt" href="#academic-search">Ves a la consulta acadèmica</a>
+<header class="capcalera">
+  <div class="capcalera-interior">
+    <span class="marca">CampusRPA</span>
+    <span class="distintiu">Simulador d'incidències</span>
+  </div>
+</header>
+<main>
+  <h1 id="page-title">Consulta i matrícula acadèmica</h1>
+  <p class="subtitle">Consulta l'expedient, comprova les places i formalitza una matrícula de prova.
+    Un entorn fictici per practicar automatitzacions amb Power Automate Desktop.</p>
+  <div class="distribucio">
+    <div>
+      <section id="academic-search" class="targeta" aria-labelledby="search-title" tabindex="-1">
+        <p class="pas">Pas 1 · Consulta</p>
+        <h2 id="search-title">Consulta una sol·licitud</h2>
+        <p class="ajuda">Introdueix l'identificador i el nom de l'assignatura. S'accepten majúscules, minúscules i noms sense accents.</p>
+        <form id="academic-form" novalidate>
+          <div class="grid">
+            <div>
+              <label for="student-input">ID de l'alumne</label>
+              <input id="student-input" name="student" type="text" placeholder="Ex.: ALU001"
+                autocomplete="off" spellcheck="false" maxlength="20" required
+                aria-describedby="student-help student-error">
+              <span id="student-help" class="camp-ajuda">Format: ALU i tres dígits.</span>
+              <span id="student-error" class="camp-error" hidden></span>
+            </div>
+            <div>
+              <label for="subject-input">Assignatura</label>
+              <input id="subject-input" name="subject" type="text" placeholder="Ex.: Automatització RPA"
+                autocomplete="off" maxlength="100" list="subject-options" required
+                aria-describedby="subject-help subject-error">
+              <datalist id="subject-options"></datalist>
+              <span id="subject-help" class="camp-ajuda">Tria una assignatura del catàleg.</span>
+              <span id="subject-error" class="camp-error" hidden></span>
+            </div>
+          </div>
+          <div class="accions">
+            <button id="search-button" class="boto" data-testid="search-academic" type="submit">Consultar sol·licitud</button>
+            <span id="search-status" class="estat-consulta" role="status" aria-live="polite" aria-atomic="true"></span>
+          </div>
+        </form>
+      </section>
+      <section id="result-panel" class="targeta result" aria-labelledby="result-title" hidden>
+        <p class="pas">Pas 2 · Resultat</p>
+        <h2 id="result-title" tabindex="-1">Resultat de la consulta</h2>
+        <dl class="dades">
+          <div class="row"><dt>Alumne</dt><dd id="result-student">—</dd></div>
+          <div class="row"><dt>Nom i cognoms</dt><dd id="result-student-name">—</dd></div>
+          <div class="row"><dt>Titulació</dt><dd id="result-degree">—</dd></div>
+          <div class="row"><dt>Estat de l'expedient</dt><dd id="result-student-status">—</dd></div>
+          <div class="row"><dt>Assignatura</dt><dd id="result-subject">—</dd></div>
+          <div class="row"><dt>Codi</dt><dd id="result-subject-details">—</dd></div>
+          <div class="row"><dt>Crèdits</dt><dd id="result-subject-credits">—</dd></div>
+          <div class="row"><dt>Places disponibles</dt><dd id="result-seats">—</dd></div>
+          <div class="row"><dt>Estat de l'assignatura</dt><dd id="result-course-status">—</dd></div>
+        </dl>
+        <div id="message" class="message" role="status" aria-live="polite" aria-atomic="true"></div>
+        <form id="enrollment-section" novalidate hidden>
+          <h3>Formalitza la matrícula</h3>
+          <label for="enrollment-note">Observació de matrícula <span class="ajuda">(opcional)</span></label>
+          <input id="enrollment-note" name="note" type="text" placeholder="Ex.: Sol·licitud automàtica"
+            maxlength="500" aria-describedby="note-help note-error">
+          <span id="note-help" class="camp-ajuda">Màxim 500 caràcters. No introdueixis dades personals reals.</span>
+          <span id="note-error" class="camp-error" hidden></span>
+          <div class="accions">
+            <button id="create-enrollment-button" class="boto" data-testid="create-enrollment" type="submit">Formalitzar matrícula</button>
+          </div>
+        </form>
+      </section>
+    </div>
+    <aside aria-label="Ajuda i dades de prova">
+      <section class="targeta" aria-labelledby="simulation-title">
+        <h2 id="simulation-title">Incidències tècniques</h2>
+        <p class="ajuda">Controls del professor. Activa una incidència per a la pròxima operació indicada.
+          Només s'aplica una vegada; un altre botó substitueix la selecció.</p>
+        <button id="simulate-slow" class="incidencia" type="button" data-incidencia="lenta" aria-pressed="false">Consulta lenta · 10 segons</button>
+        <button id="simulate-timeout" class="incidencia" type="button" data-incidencia="senseResposta" aria-pressed="false">Consulta sense resposta</button>
+        <button id="simulate-transient" class="incidencia" type="button" data-incidencia="transitoria" aria-pressed="false">Error en la pròxima consulta</button>
+        <button id="simulate-enrollment-failure" class="incidencia" type="button" data-incidencia="falladaMatricula" aria-pressed="false">Matrícula: error abans de registrar</button>
+        <button id="simulate-lost-confirmation" class="incidencia" type="button" data-incidencia="confirmacioPerduda" aria-pressed="false">Matrícula: confirmació perduda</button>
+        <button id="simulation-clear" class="incidencia" type="button">Desactivar incidència pendent</button>
+        <button id="simulation-cancel" class="incidencia" type="button" disabled>Cancel·lar espera / recuperar controls</button>
+        <p id="simulation-status" class="ajuda" role="status" aria-live="polite" aria-atomic="true">Mode normal. Cap incidència activada.</p>
+        <p class="ajuda">Una consulta sense resposta i una confirmació perduda continuen esperant fins que
+          cancel·lis o canviïs les dades. El timeout l'ha de detectar PAD; configura'l, per exemple, a 3 segons.
+          Cancel·lar no desfà matrícules registrades ni reinicia places. Després d'una confirmació perduda,
+          torna a consultar per recuperar la referència. Recarregar la pàgina sí que esborra les dades.</p>
+      </section>
+      <section class="targeta" aria-labelledby="catalog-title">
+        <h2 id="catalog-title">Catàleg d'assignatures</h2>
+        <p class="ajuda">Les places s'actualitzen després de cada matrícula.</p>
+        <ul id="subject-catalog" class="cataleg"></ul>
+      </section>
+      <section class="targeta" aria-labelledby="examples-title">
+        <h2 id="examples-title">Casos de prova</h2>
+        <p class="ajuda">Alumnes disponibles: ALU001–ALU010. Selecciona un cas per omplir el formulari.</p>
+        <div class="casos">
+          <button class="cas" type="button" data-alumne="ALU001" data-assignatura="Automatització RPA">
+            <strong>Matrícula disponible</strong><span>ALU001 · Automatització RPA</span>
+          </button>
+          <button class="cas" type="button" data-alumne="ALU007" data-assignatura="Assignatura Inexistent">
+            <strong>Assignatura no trobada</strong><span>ALU007 · Assignatura Inexistent</span>
+          </button>
+          <button class="cas" type="button" data-alumne="ALU008" data-assignatura="Bases de Dades">
+            <strong>Sense places</strong><span>ALU008 · Bases de Dades</span>
+          </button>
+          <button class="cas" type="button" data-alumne="ALU010" data-assignatura="Power Automate">
+            <strong>Expedient bloquejat</strong><span>ALU010 · Power Automate</span>
+          </button>
+        </div>
+      </section>
+    </aside>
+  </div>
+  <noscript><p class="message error">Cal activar JavaScript per consultar i formalitzar matrícules.</p></noscript>
+</main>
+<footer>Simulació local: no es connecta a cap servei ni desa dades al servidor.
+  Les matrícules i les places només es mantenen en aquesta pàgina; recarregar-la reinicia les dades.
+  Les referències són úniques dins d'aquesta simulació, no són justificants oficials.</footer>
+
+<script id="academic-model">
+  const alumnes = new Map([
+    ['ALU001', { nom: 'Ana García', titulacio: 'Grau en Enginyeria', estat: 'Actiu' }],
+    ['ALU002', { nom: 'Bruno López', titulacio: 'Grau en Informàtica', estat: 'Actiu' }],
+    ['ALU003', { nom: 'Carla Martín', titulacio: 'Màster en Transformació Digital', estat: 'Actiu' }],
+    ['ALU004', { nom: 'Diego Serra', titulacio: 'Grau en Enginyeria', estat: 'Actiu' }],
+    ['ALU005', { nom: 'Elena Costa', titulacio: 'Grau en Informàtica', estat: 'Actiu' }],
+    ['ALU006', { nom: 'Ferran Vidal', titulacio: 'Grau en Enginyeria', estat: 'Actiu' }],
+    ['ALU007', { nom: 'Gemma Pons', titulacio: 'Grau en Informàtica', estat: 'Actiu' }],
+    ['ALU008', { nom: 'Hugo Riera', titulacio: 'Grau en Enginyeria', estat: 'Actiu' }],
+    ['ALU009', { nom: 'Irene Mas', titulacio: 'Màster en Transformació Digital', estat: 'Actiu' }],
+    ['ALU010', { nom: 'Joan Serra', titulacio: 'Grau en Enginyeria', estat: 'Bloquejat' }]
+  ]);
+  const assignatures = [
+    { nom: 'Automatització RPA', places: 10, credits: 6, codi: 'RPA-101' },
+    { nom: 'Power Automate', places: 15, credits: 6, codi: 'PA-201' },
+    { nom: 'Automatització Web', places: 5, credits: 6, codi: 'WEB-210' },
+    { nom: 'Gestió de Processos', places: 20, credits: 12, codi: 'GP-110' },
+    { nom: 'Bases de Dades', places: 0, credits: 6, codi: 'BD-301' }
+  ];
+
+  /**
+   * Normalitza un nom per comparar-lo sense accents, caixa ni espais redundants.
+   * @param {string} text Nom que es vol comparar.
+   * @returns {string} Clau normalitzada.
+   */
+  function normalitzar(text) {
+    return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .trim().replace(/\s+/g, ' ').toLocaleLowerCase('ca');
+  }
+
+  /**
+   * Gestiona les consultes, les places i les matrícules de la simulació local.
+   */
+  class ServeiAcademic {
+    #alumnes = new Map(Array.from(alumnes, ([codi, alumne]) => [codi, { ...alumne }]));
+    #assignatures = new Map(assignatures.map(assignatura => [normalitzar(assignatura.nom), { ...assignatura }]));
+    #matricules = new Map();
+
+    /**
+     * Retorna el catàleg actual sense permetre modificar les places internes.
+     * @returns {Array<{nom: string, places: number, credits: number, codi: string}>} Assignatures disponibles.
+     */
+    getCataleg() {
+      return Array.from(this.#assignatures.values(), assignatura => ({ ...assignatura }));
+    }
+
+    /**
+     * Comprova les dades, l'expedient, les places i l'existència d'una matrícula.
+     * @param {string} identificador Identificador de l'alumne.
+     * @param {string} nomAssignatura Nom de l'assignatura.
+     * @returns {object} Resultat de la consulta, errors i disponibilitat de matrícula.
+     */
+    consultar(identificador, nomAssignatura) {
+      const codiAlumne = identificador.trim().toUpperCase();
+      const clauAssignatura = normalitzar(nomAssignatura);
+      const alumne = this.#alumnes.get(codiAlumne);
+      const assignatura = this.#assignatures.get(clauAssignatura);
+      const errors = {};
+      if (!codiAlumne) errors.alumne = "Introdueix l'ID de l'alumne.";
+      else if (!/^ALU\d{3}$/.test(codiAlumne)) errors.alumne = "L'ID ha de tenir el format ALU i tres dígits.";
+      else if (!alumne) errors.alumne = 'Alumne no trobat.';
+      if (!clauAssignatura) errors.assignatura = "Introdueix el nom de l'assignatura.";
+      else if (nomAssignatura.trim().length > 100) errors.assignatura = "El nom no pot superar els 100 caràcters.";
+      else if (!assignatura) errors.assignatura = 'Assignatura no trobada.';
+      const resultat = {
+        codiAlumne, clauAssignatura, nomAssignatura: assignatura ? assignatura.nom : nomAssignatura.trim(),
+        alumne: alumne ? { ...alumne } : null,
+        assignatura: assignatura ? { ...assignatura } : null,
+        errors, potMatricular: false,
+        estatAssignatura: assignatura ? (assignatura.places > 0 ? 'Disponible' : 'Sense places') : 'No trobada',
+        missatge: '', tipus: 'error', matricula: null
+      };
+      if (Object.keys(errors).length) {
+        resultat.missatge = Object.values(errors).join(' ');
+      } else if (alumne.estat !== 'Actiu') {
+        resultat.missatge = "L'expedient de l'alumne està bloquejat. No es pot formalitzar la matrícula.";
+      } else {
+        const matricula = this.#matricules.get(this.#clauMatricula(codiAlumne, assignatura.codi));
+        if (matricula) {
+          resultat.matricula = { ...matricula };
+          resultat.estatAssignatura = 'Matriculada';
+          resultat.missatge = `Aquest alumne ja està matriculat. Referència: ${matricula.referencia}.`;
+          resultat.tipus = 'warning';
+        } else if (assignatura.places === 0) {
+          resultat.missatge = 'No hi ha places disponibles.';
+          resultat.tipus = 'warning';
+        } else {
+          resultat.potMatricular = true;
+          resultat.missatge = 'La sol·licitud és vàlida. Pots formalitzar la matrícula.';
+          resultat.tipus = 'success';
+        }
+      }
+      return resultat;
+    }
+
+    /**
+     * Revalida la sol·licitud i registra una matrícula, descomptant una única plaça.
+     * @param {string} identificador Identificador de l'alumne.
+     * @param {string} nomAssignatura Nom de l'assignatura.
+     * @param {string} observacio Observació opcional, de fins a 500 caràcters.
+     * @returns {object} Resultat actualitzat amb la matrícula o l'error de validació.
+     */
+    formalitzar(identificador, nomAssignatura, observacio = '') {
+      const resultat = this.consultar(identificador, nomAssignatura);
+      if (!resultat.potMatricular) return resultat;
+      const nota = observacio.trim();
+      if (nota.length > 500) {
+        return { ...resultat, potMatricular: false, tipus: 'error',
+          errors: { observacio: "L'observació no pot superar els 500 caràcters." },
+          missatge: "L'observació no pot superar els 500 caràcters." };
+      }
+      const matricula = {
+        referencia: `MAT-${String(this.#matricules.size + 1).padStart(6, '0')}`,
+        codiAlumne: resultat.codiAlumne, codiAssignatura: resultat.assignatura.codi, observacio: nota
+      };
+      this.#matricules.set(this.#clauMatricula(matricula.codiAlumne, matricula.codiAssignatura), matricula);
+      this.#assignatures.get(resultat.clauAssignatura).places -= 1;
+      return { ...this.consultar(identificador, nomAssignatura), tipus: 'success',
+        missatge: `Matrícula formalitzada correctament. Referència: ${matricula.referencia}.` +
+          (nota ? ` Observació: ${nota}` : '') };
+    }
+
+    #clauMatricula(codiAlumne, codiAssignatura) {
+      return `${codiAlumne}:${codiAssignatura}`;
+    }
+  }
+</script>
+<script id="academic-controller">
+  const serveiAcademic = new ServeiAcademic();
+  const elements = Object.fromEntries([
+    'academic-form', 'student-input', 'subject-input', 'student-error', 'subject-error',
+    'search-button', 'search-status', 'result-panel', 'result-title', 'result-student',
+    'result-student-name', 'result-degree', 'result-student-status', 'result-subject',
+    'result-subject-details', 'result-subject-credits', 'result-seats', 'result-course-status', 'message',
+    'enrollment-section', 'enrollment-note', 'note-error', 'create-enrollment-button',
+    'subject-options', 'subject-catalog'
+  ].map(id => [id, document.getElementById(id)]));
+  let consultaActual = null;
+  let dadesConsultades = null;
+  let temporitzador = null;
+  let operacioActual = 0;
+  let enCurs = false;
+  const incidencies = new Map([
+    ['lenta', { operacio: 'consulta', nom: 'Consulta lenta · 10 segons' }],
+    ['senseResposta', { operacio: 'consulta', nom: 'Consulta sense resposta' }],
+    ['transitoria', { operacio: 'consulta', nom: 'Error transitori de consulta' }],
+    ['falladaMatricula', { operacio: 'matricula', nom: 'Error abans de registrar la matrícula' }],
+    ['confirmacioPerduda', { operacio: 'matricula', nom: 'Confirmació de matrícula perduda' }]
+  ]);
+  const botonsIncidencia = Array.from(document.querySelectorAll('[data-incidencia]'));
+  const estatSimulacio = document.getElementById('simulation-status');
+  let incidenciaPendent = null;
+
+  /**
+   * Activa o desactiva una incidència per a la pròxima operació compatible.
+   * @param {string|null} incidencia Clau de la incidència o null per desactivar-la.
+   * @returns {void}
+   */
+  function seleccionarIncidencia(incidencia) {
+    if (enCurs) {
+      estatSimulacio.textContent = "Cancel·la o espera que acabi l'operació abans de canviar la incidència.";
+      return;
+    }
+    if (incidencia !== null && !incidencies.has(incidencia)) {
+      throw new Error('Incidència de simulació desconeguda.');
+    }
+    incidenciaPendent = incidencia;
+    for (const boto of botonsIncidencia) {
+      boto.setAttribute('aria-pressed', String(boto.dataset.incidencia === incidencia));
+    }
+    estatSimulacio.textContent = incidencia ?
+      `Activada: ${incidencies.get(incidencia).nom}. S'aplicarà una sola vegada.` :
+      'Mode normal. Cap incidència activada.';
+  }
+
+  /**
+   * Consumeix la incidència pendent només si correspon a l'operació iniciada.
+   * @param {string} tipus Tipus d'operació iniciada.
+   * @returns {string|null} Incidència que s'ha d'aplicar.
+   */
+  function consumirIncidencia(tipus) {
+    if (!incidenciaPendent || incidencies.get(incidenciaPendent).operacio !== tipus) return null;
+    const incidencia = incidenciaPendent;
+    seleccionarIncidencia(null);
+    estatSimulacio.textContent = `En execució: ${incidencies.get(incidencia).nom}. La incidència ja s'ha consumit.`;
+    return incidencia;
+  }
+
+  /**
+   * Mostra o elimina un error accessible associat a un camp.
+   * @param {string} idCamp Identificador del camp.
+   * @param {string} idError Identificador del missatge d'error.
+   * @param {string} missatge Error o cadena buida per eliminar-lo.
+   * @returns {void}
+   */
+  function mostrarErrorCamp(idCamp, idError, missatge = '') {
+    elements[idCamp].setAttribute('aria-invalid', String(Boolean(missatge)));
+    elements[idError].textContent = missatge;
+    elements[idError].hidden = !missatge;
+  }
+
+  /**
+   * Actualitza les opcions de consulta i les places visibles del catàleg.
+   * @returns {void}
+   */
+  function mostrarCataleg() {
+    elements['subject-options'].replaceChildren();
+    elements['subject-catalog'].replaceChildren();
+    for (const assignatura of serveiAcademic.getCataleg()) {
+      const opcio = document.createElement('option');
+      opcio.value = assignatura.nom;
+      elements['subject-options'].append(opcio);
+      const fila = document.createElement('li');
+      const nom = document.createElement('strong');
+      const detall = document.createElement('span');
+      nom.textContent = assignatura.nom;
+      detall.textContent = `${assignatura.codi} · ${assignatura.credits} crèdits · ${assignatura.places} places`;
+      fila.append(nom, detall);
+      elements['subject-catalog'].append(fila);
+    }
+  }
+
+  /**
+   * Actualitza els controls i l'estat accessible d'una operació.
+   * @param {string|null} operacio Tipus d'operació o null si no n'hi ha cap.
+   * @returns {void}
+   */
+  function indicarOperacio(operacio) {
+    enCurs = operacio !== null;
+    for (const boto of botonsIncidencia) boto.disabled = enCurs;
+    document.getElementById('simulation-clear').disabled = enCurs;
+    document.getElementById('simulation-cancel').disabled = !enCurs;
+    elements['search-button'].disabled = enCurs;
+    elements['create-enrollment-button'].disabled = enCurs;
+    elements['enrollment-note'].disabled = operacio === 'matricula';
+    elements['academic-form'].setAttribute('aria-busy', String(operacio === 'consulta'));
+    elements['enrollment-section'].setAttribute('aria-busy', String(operacio === 'matricula'));
+    elements['search-button'].textContent = operacio === 'consulta' ? 'Consultant...' : 'Consultar sol·licitud';
+    elements['create-enrollment-button'].textContent = operacio === 'matricula' ? 'Formalitzant...' : 'Formalitzar matrícula';
+    elements['search-status'].textContent = operacio === 'consulta' ? 'Consultant la sol·licitud…' : '';
+  }
+
+  /**
+   * Cancel·la l'operació pendent i invalida qualsevol resultat anterior.
+   * @returns {void}
+   */
+  function invalidarConsulta() {
+    operacioActual += 1;
+    clearTimeout(temporitzador);
+    temporitzador = null;
+    consultaActual = null;
+    dadesConsultades = null;
+    indicarOperacio(null);
+    elements['result-panel'].hidden = true;
+    elements['enrollment-section'].hidden = true;
+    elements['message'].textContent = '';
+    delete elements['message'].dataset.tipusError;
+    elements['enrollment-note'].value = '';
+    mostrarErrorCamp('student-input', 'student-error');
+    mostrarErrorCamp('subject-input', 'subject-error');
+    mostrarErrorCamp('enrollment-note', 'note-error');
+  }
+
+  /**
+   * Invalida una consulta si un canvi de camp modifica les dades consultades.
+   * @returns {void}
+   */
+  function invalidarSiCanvienDades() {
+    if (dadesConsultades &&
+        (elements['student-input'].value !== dadesConsultades.identificador ||
+         elements['subject-input'].value !== dadesConsultades.nomAssignatura)) {
+      invalidarConsulta();
+    }
+  }
+
+  /**
+   * Presenta el resultat amb les dades canòniques i els errors de cada camp.
+   * @param {object} resultat Consulta o matrícula validada pel servei.
+   * @returns {void}
+   */
+  function mostrarResultat(resultat) {
+    delete elements['message'].dataset.tipusError;
+    elements['result-panel'].hidden = false;
+    elements['result-student'].textContent = resultat.codiAlumne || '—';
+    elements['result-student-name'].textContent = resultat.alumne ? resultat.alumne.nom : '—';
+    elements['result-degree'].textContent = resultat.alumne ? resultat.alumne.titulacio : '—';
+    const estatAlumne = resultat.alumne ? resultat.alumne.estat : '—';
+    elements['result-student-status'].textContent = estatAlumne;
+    elements['result-student-status'].className = resultat.alumne ? (estatAlumne === 'Actiu' ? 'success' : 'error') : '';
+    elements['result-subject'].textContent = resultat.nomAssignatura || '—';
+    elements['result-subject-details'].textContent = resultat.assignatura ? resultat.assignatura.codi : '—';
+    elements['result-subject-credits'].textContent = resultat.assignatura ? String(resultat.assignatura.credits) : '—';
+    elements['result-seats'].textContent = resultat.assignatura ? String(resultat.assignatura.places) : '—';
+    elements['result-course-status'].textContent = resultat.estatAssignatura;
+    elements['result-course-status'].className = resultat.assignatura ?
+      (resultat.estatAssignatura === 'Disponible' ? 'success' : 'warning') : 'error';
+    elements['message'].textContent = resultat.missatge;
+    elements['message'].className = `message ${resultat.tipus}`;
+    elements['enrollment-section'].hidden = !resultat.potMatricular;
+    mostrarErrorCamp('student-input', 'student-error', resultat.errors.alumne);
+    mostrarErrorCamp('subject-input', 'subject-error', resultat.errors.assignatura);
+    mostrarErrorCamp('enrollment-note', 'note-error', resultat.errors.observacio);
+  }
+
+  /**
+   * Informa d'un error inesperat sense deixar controls bloquejats.
+   * @param {Error} error Error de l'operació.
+   * @param {string} missatge Missatge tècnic que es vol mostrar.
+   * @returns {void}
+   */
+  function mostrarErrorOperacio(error, missatge = "No s'ha pogut completar l'operació. Torna a consultar la sol·licitud.") {
+    console.error("No s'ha pogut completar l'operació acadèmica.", error);
+    consultaActual = null;
+    elements['result-panel'].hidden = false;
+    elements['enrollment-section'].hidden = true;
+    for (const dada of elements['result-panel'].querySelectorAll('dd')) {
+      dada.textContent = '—';
+      dada.className = '';
+    }
+    elements['message'].textContent = missatge;
+    elements['message'].className = 'message error';
+    elements['message'].dataset.tipusError = 'tecnic';
+    elements['result-title'].focus();
+  }
+
+  /**
+   * Executa una operació simulada i rebutja respostes cancel·lades o obsoletes.
+   * @param {string} tipus Tipus d'operació.
+   * @param {number} retard Temps de simulació en mil·lisegons.
+   * @param {Function} accio Operació que rep la incidència i retorna false si queda sense confirmació.
+   * @returns {void}
+   */
+  function executarOperacio(tipus, retard, accio) {
+    const incidencia = consumirIncidencia(tipus);
+    const versio = ++operacioActual;
+    delete elements['message'].dataset.tipusError;
+    indicarOperacio(tipus);
+    if (incidencia === 'senseResposta') return;
+    temporitzador = setTimeout(() => {
+      if (versio !== operacioActual) return;
+      temporitzador = null;
+      let completada = true;
+      try {
+        if (incidencia === 'transitoria' || incidencia === 'falladaMatricula') {
+          mostrarErrorOperacio(new Error('Incidència tècnica simulada.'),
+            incidencia === 'transitoria' ?
+              'Error tècnic simulat: servei de consulta temporalment no disponible. Torna a consultar.' :
+              "Error tècnic simulat: no s'ha registrat la matrícula. Torna a consultar abans de reintentar.");
+          estatSimulacio.textContent = "Error tècnic simulat completat. La pròxima operació serà normal.";
+          return;
+        }
+        completada = accio(incidencia) !== false;
+        if (incidencia && completada) {
+          estatSimulacio.textContent = "Simulació completada. La pròxima operació serà normal.";
+        }
+      } catch (error) {
+        mostrarErrorOperacio(error);
+      } finally {
+        if (completada) indicarOperacio(null);
+      }
+    }, incidencia === 'lenta' ? 10000 : retard);
+  }
+
+  /**
+   * Valida i consulta les dades del formulari, sense reutilitzar resultats anteriors.
+   * @returns {void}
+   */
+  function consultarSollicitud() {
+    if (enCurs) return;
+    invalidarConsulta();
+    const identificador = elements['student-input'].value;
+    const nomAssignatura = elements['subject-input'].value;
+    dadesConsultades = { identificador, nomAssignatura };
+    const resultat = serveiAcademic.consultar(identificador, nomAssignatura);
+    if (Object.keys(resultat.errors).length) {
+      mostrarResultat(resultat);
+      elements[resultat.errors.alumne ? 'student-input' : 'subject-input'].focus();
+      return;
+    }
+    executarOperacio('consulta', 600, () => {
+      const consulta = serveiAcademic.consultar(identificador, nomAssignatura);
+      consultaActual = consulta.potMatricular ?
+        { identificador: consulta.codiAlumne, nomAssignatura: consulta.nomAssignatura } : null;
+      mostrarResultat(consulta);
+      elements['result-title'].focus();
+    });
+  }
+
+  /**
+   * Formalitza exclusivament la consulta vigent i revalida les places al confirmar.
+   * @returns {void}
+   */
+  function formalitzarMatricula() {
+    if (enCurs) return;
+    if (!consultaActual || elements['enrollment-section'].hidden) {
+      elements['search-status'].textContent = 'Consulta una sol·licitud vàlida abans de formalitzar la matrícula.';
+      elements['student-input'].focus();
+      return;
+    }
+    if (elements['student-input'].value.trim().toUpperCase() !== consultaActual.identificador ||
+        normalitzar(elements['subject-input'].value) !== normalitzar(consultaActual.nomAssignatura)) {
+      invalidarConsulta();
+      elements['search-status'].textContent = 'Les dades han canviat. Torna a consultar la sol·licitud.';
+      return;
+    }
+    const observacio = elements['enrollment-note'].value;
+    if (observacio.trim().length > 500) {
+      mostrarErrorCamp('enrollment-note', 'note-error', "L'observació no pot superar els 500 caràcters.");
+      elements['enrollment-note'].focus();
+      return;
+    }
+    const consulta = { ...consultaActual };
+    executarOperacio('matricula', 700, incidencia => {
+      const resultat = serveiAcademic.formalitzar(consulta.identificador, consulta.nomAssignatura, observacio);
+      consultaActual = null;
+      if (incidencia === 'confirmacioPerduda' && resultat.tipus === 'success') {
+        elements['result-panel'].hidden = true;
+        elements['enrollment-section'].hidden = true;
+        elements['search-status'].textContent = 'Esperant la confirmació de matrícula…';
+        estatSimulacio.textContent = 'Simulació: matrícula registrada, però confirmació no lliurada. Cancel·la l’espera i torna a consultar; no recarreguis.';
+        return false;
+      }
+      mostrarResultat(resultat);
+      mostrarCataleg();
+      elements['result-title'].focus();
+    });
+  }
+
+  for (const boto of botonsIncidencia) {
+    boto.addEventListener('click', () => seleccionarIncidencia(
+      incidenciaPendent === boto.dataset.incidencia ? null : boto.dataset.incidencia));
+  }
+  document.getElementById('simulation-clear').addEventListener('click', () => seleccionarIncidencia(null));
+  document.getElementById('simulation-cancel').addEventListener('click', () => {
+    invalidarConsulta();
+    mostrarCataleg();
+    estatSimulacio.textContent = 'Espera cancel·lada. Es conserven les matrícules i les places. Torna a consultar per comprovar el resultat.';
+    elements['search-status'].textContent = 'Operació cancel·lada. Torna a consultar la sol·licitud.';
+    elements['search-button'].focus();
+  });
+  elements['academic-form'].addEventListener('submit', esdeveniment => {
+    esdeveniment.preventDefault();
+    consultarSollicitud();
+  });
+  elements['enrollment-section'].addEventListener('submit', esdeveniment => {
+    esdeveniment.preventDefault();
+    formalitzarMatricula();
+  });
+  for (const id of ['student-input', 'subject-input']) {
+    elements[id].addEventListener('input', invalidarConsulta);
+    elements[id].addEventListener('change', invalidarSiCanvienDades);
+  }
+  elements['enrollment-note'].addEventListener('input', () => mostrarErrorCamp('enrollment-note', 'note-error'));
+  for (const boto of document.querySelectorAll('.cas')) {
+    boto.addEventListener('click', () => {
+      invalidarConsulta();
+      elements['student-input'].value = boto.dataset.alumne;
+      elements['subject-input'].value = boto.dataset.assignatura;
+      elements['student-input'].focus();
+      elements['search-status'].textContent = 'Cas carregat. Prem «Consultar sol·licitud» per validar-lo.';
+    });
+  }
+  mostrarCataleg();
+</script>
+</body>
+</html>
