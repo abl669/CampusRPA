@@ -151,19 +151,34 @@ async function executarProvesEscenaris() {
     comprovar(places(serveiPersistent(), 'PA-201') === 15, 'Hauria de restaurar les places inicials.');
   });
 
-  afegirProva('triarDestiAleatori_ambValorsExtrems_retornaPrimerIUltimDesti', 'unitat', () => {
-    comprovar(triarDestiAleatori(() => 0) === null, 'El valor 0 hauria de quedar-se en mode normal.');
-    comprovar(triarDestiAleatori(() => 0.999999) === 'ErrorServei.html', "El valor màxim hauria de triar l'últim destí.");
-    comprovar(triarDestiAleatori(() => 1) === 'ErrorServei.html' && triarDestiAleatori(() => -1) === null,
+  const generadorSequencial = (valors) => { let posicio = 0; return () => valors[posicio++]; };
+  afegirProva('triarDestiAleatori_ambSorteigSuperiorALaProbabilitat_esQuedaEnModeNormal', 'unitat', () => {
+    comprovar(triarDestiAleatori(() => PROBABILITAT_ERROR) === null, 'El llindar hauria de quedar-se en mode normal.');
+    comprovar(triarDestiAleatori(() => 0.999999) === null, 'Un valor alt hauria de quedar-se en mode normal.');
+  });
+  afegirProva('triarDestiAleatori_ambSorteigInferiorALaProbabilitat_retornaPaginaError', 'unitat', () => {
+    comprovar(triarDestiAleatori(generadorSequencial([0, 0])) === PAGINES_ERROR[0], 'Hauria de triar la primera pàgina d\'error.');
+    comprovar(triarDestiAleatori(generadorSequencial([0.1, 0.999999])) === 'ErrorServei.html', "Hauria de triar l'última pàgina d'error.");
+    comprovar(triarDestiAleatori(generadorSequencial([0, 1])) === 'ErrorServei.html'
+      && triarDestiAleatori(generadorSequencial([0, -1])) === PAGINES_ERROR[0],
       'Els valors fora de rang no haurien de retornar destins inexistents.');
   });
-  afegirProva('triarDestiAleatori_ambGeneradorUniforme_potArribarATotsElsDestins', 'unitat', () => {
+  afegirProva('triarDestiAleatori_ambGeneradorUniforme_potArribarATotesLesPaginesError', 'unitat', () => {
     const destins = new Set();
-    for (let posicio = 0; posicio < DESTINS_ALEATORIS.length; posicio += 1) {
-      destins.add(triarDestiAleatori(() => (posicio + 0.5) / DESTINS_ALEATORIS.length));
+    for (let posicio = 0; posicio < PAGINES_ERROR.length; posicio += 1) {
+      destins.add(triarDestiAleatori(generadorSequencial([0, (posicio + 0.5) / PAGINES_ERROR.length])));
     }
-    comprovar(destins.size === DESTINS_ALEATORIS.length, 'Cada destí hauria de tenir la seva franja de probabilitat.');
-    comprovar(!DESTINS_ALEATORIS.includes('Matricula.html'), "No hauria de redirigir a Matricula.html per evitar bucles.");
+    comprovar(destins.size === PAGINES_ERROR.length, "Cada pàgina d'error hauria de tenir la seva franja de probabilitat.");
+    comprovar(!PAGINES_ERROR.includes('Matricula.html'), 'No hauria de redirigir a Matricula.html per evitar bucles.');
+  });
+  afegirProva('triarDestiAleatori_ambMoltesCarregues_errorAproximadamentUnDeCadaTres', 'unitat', () => {
+    let llavor = 12345;
+    const generador = () => { llavor = (llavor * 1103515245 + 12345) % 2147483648; return llavor / 2147483648; };
+    const intents = 6000;
+    let errors = 0;
+    for (let i = 0; i < intents; i += 1) if (triarDestiAleatori(generador) !== null) errors += 1;
+    const proporcio = errors / intents;
+    comprovar(proporcio > 0.29 && proporcio < 0.38, `La proporció d'errors hauria de ser propera a 1/3 (${proporcio.toFixed(3)}).`);
   });
   afegirProva('setModeAleatori_ambActivacioIDesactivacio_esDesaIEsLlegeix', 'unitat', () => {
     const anterior = localStorage.getItem(CLAU_MODE_ALEATORI);

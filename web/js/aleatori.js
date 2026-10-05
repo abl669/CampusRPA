@@ -3,9 +3,11 @@
 /** Clau de localStorage amb la preferència del mode aleatori. */
 const CLAU_MODE_ALEATORI = 'campusrpa.aleatori.v1';
 
-/** Destins possibles en carregar Matricula.html. null vol dir quedar-se en mode normal. */
-const DESTINS_ALEATORIS = Object.freeze([
-  null,
+/** Probabilitat que una càrrega de Matricula.html redirigeixi a una pàgina d'error (aprox. 1 de cada 3). */
+const PROBABILITAT_ERROR = 1 / 3;
+
+/** Pàgines d'error possibles quan el sorteig decideix simular una incidència. */
+const PAGINES_ERROR = Object.freeze([
   'ErrorCarga.html',
   'ErrorConsultaLenta.html',
   'ErrorSenseResposta.html',
@@ -44,13 +46,15 @@ function setModeAleatori(actiu) {
 }
 
 /**
- * Tria un destí amb la mateixa probabilitat per a cada opció.
- * @param {Function} generador Funció que retorna un nombre a [0, 1).
+ * Decideix el destí d'una càrrega: amb probabilitat PROBABILITAT_ERROR tria una pàgina d'error
+ * (totes equiprobables); altrament es queda en mode normal.
+ * @param {Function} generador Funció que retorna un nombre a [0, 1). Es crida un cop o dos.
  * @returns {string|null} Fitxer de destí o null per quedar-se a la pàgina normal.
  */
 function triarDestiAleatori(generador = Math.random) {
-  const index = Math.min(Math.floor(generador() * DESTINS_ALEATORIS.length), DESTINS_ALEATORIS.length - 1);
-  return DESTINS_ALEATORIS[Math.max(index, 0)];
+  if (generador() >= PROBABILITAT_ERROR) return null;
+  const index = Math.min(Math.floor(generador() * PAGINES_ERROR.length), PAGINES_ERROR.length - 1);
+  return PAGINES_ERROR[Math.max(index, 0)];
 }
 
 /**
