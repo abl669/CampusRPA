@@ -3,7 +3,7 @@
 /** Clau de localStorage amb la preferència del mode aleatori. */
 const CLAU_MODE_ALEATORI = 'campusrpa.aleatori.v1';
 
-/** Destins possibles en carregar index.html. null vol dir quedar-se en mode normal. */
+/** Destins possibles en carregar Matricula.html. null vol dir quedar-se en mode normal. */
 const DESTINS_ALEATORIS = Object.freeze([
   null,
   'ErrorCarga.html',
@@ -17,7 +17,7 @@ const DESTINS_ALEATORIS = Object.freeze([
 
 /**
  * Indica si el mode aleatori està activat. Per defecte, i si no es pot llegir la preferència, ho està.
- * @returns {boolean} true si index.html ha de redirigir aleatòriament.
+ * @returns {boolean} true si Matricula.html ha de redirigir aleatòriament.
  */
 function isModeAleatoriActiu() {
   try {
@@ -54,7 +54,7 @@ function triarDestiAleatori(generador = Math.random) {
 }
 
 /**
- * Redirigeix index.html a un escenari aleatori si el mode està actiu i la URL no ho impedeix (?aleatori=0).
+ * Redirigeix Matricula.html a un escenari aleatori si el mode està actiu i la URL no ho impedeix (?aleatori=0).
  * Conserva la resta de paràmetres (per exemple, reiniciar o segons). Usa replace per no trencar el botó Enrere.
  * @returns {void}
  */
@@ -82,9 +82,9 @@ function connectarBotoModeAleatori(boto, estat) {
   boto.addEventListener('click', () => {
     const actiu = !isModeAleatoriActiu();
     estat.textContent = setModeAleatori(actiu) ?
-      (actiu ? 'Activat: index.html obrirà un escenari aleatori a cada càrrega.' :
-        'Desactivat: index.html funcionarà sempre en mode normal.') :
-      "No s'ha pogut desar la preferència. Usa index.html?aleatori=0.";
+      (actiu ? 'Activat: Matricula.html obrirà un escenari aleatori a cada càrrega.' :
+        'Desactivat: Matricula.html funcionarà sempre en mode normal.') :
+      "No s'ha pogut desar la preferència. Usa Matricula.html?aleatori=0.";
     actualitzar();
   });
   window.addEventListener('storage', esdeveniment => {

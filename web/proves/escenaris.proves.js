@@ -163,7 +163,7 @@ async function executarProvesEscenaris() {
       destins.add(triarDestiAleatori(() => (posicio + 0.5) / DESTINS_ALEATORIS.length));
     }
     comprovar(destins.size === DESTINS_ALEATORIS.length, 'Cada destí hauria de tenir la seva franja de probabilitat.');
-    comprovar(!DESTINS_ALEATORIS.includes('index.html'), "No hauria de redirigir a index.html per evitar bucles.");
+    comprovar(!DESTINS_ALEATORIS.includes('Matricula.html'), "No hauria de redirigir a Matricula.html per evitar bucles.");
   });
   afegirProva('setModeAleatori_ambActivacioIDesactivacio_esDesaIEsLlegeix', 'unitat', () => {
     const anterior = localStorage.getItem(CLAU_MODE_ALEATORI);

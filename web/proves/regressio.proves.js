@@ -1,6 +1,6 @@
 /**
  * Executa proves unitàries del servei i proves d'integració sobre la pàgina oberta.
- * Carrega aquest fitxer com a script a web/index.html, només en un entorn de proves, i executa
+ * Carrega aquest fitxer com a script a web/Matricula.html, només en un entorn de proves, i executa
  * executarProvesAcademiques(). Les dades compartides es reinicien abans i després de les proves.
  * @returns {Promise<object>} Recompte i resultats individuals de les proves.
  */

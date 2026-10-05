@@ -7,21 +7,21 @@
   <meta name="description" content="Simulador acadèmic per practicar consultes i matrícules amb Power Automate Desktop.">
   <title>CampusRPA | Consulta i matrícula</title>
   <link rel="stylesheet" href="css/campusrpa.css">
-  <script defer src="js/aleatori.js"></script>
+  <script src="js/aleatori.js" data-redirigir="true"></script>
   <script defer src="js/model.js"></script>
   <script defer src="js/escenaris.js"></script>
   <script defer src="js/plantilla.js"></script>
   <script defer src="js/aplicacio.js"></script>
 </head>
-<body data-escenari="senseResposta">
+<body data-escenari="normal">
 <a class="salt" href="#aplicacio">Ves al contingut principal</a>
 <header class="capcalera">
   <div class="capcalera-interior">
     <a class="marca" href="Matricula.html">CampusRPA</a>
     <nav class="navegacio" aria-label="Navegació principal">
-      <a href="Matricula.html">Consulta</a>
+      <a href="Matricula.html" aria-current="page">Consulta</a>
       <a href="escenaris.html">Escenaris</a>
-      <span class="distintiu escenari" data-testid="scenario-badge">Escenari: consulta sense resposta</span>
+      <span class="distintiu">Entorn de pràctiques</span>
     </nav>
   </div>
 </header>

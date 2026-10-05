@@ -67,7 +67,7 @@ const MARCATGE_APLICACIO = `
     <aside aria-label="Ajuda i dades de prova">
       <section class="targeta" aria-labelledby="random-title">
         <h2 id="random-title">Mode aleatori</h2>
-        <p class="ajuda">Si està activat, cada càrrega d'index.html obre un escenari a l'atzar: normal o amb error.</p>
+        <p class="ajuda">Si està activat, cada càrrega de Matricula.html obre un escenari a l'atzar: normal o amb error.</p>
         <button id="random-mode-button" class="boto secundari" type="button" aria-pressed="true">Mode aleatori: activat</button>
         <p id="random-mode-status" class="ajuda" role="status" aria-live="polite"></p>
       </section>
