@@ -171,8 +171,20 @@ async function executarProvesAcademiques() {
     comprovar(camp('result-subject-details').textContent === '—' && camp('result-subject-credits').textContent === '—',
       'Hauria de mostrar el codi i els crèdits absents sense dades anteriors.');
   });
-  afegirProva('consulta_ambAccentsIEspais_mostraDadesCanoniquesIMatricula', 'integracio', async () => {
-    await consultar(' alu001 ', ' AUTOMATITZACIO   RPA ');
+  afegirProva('desplegableAssignatura_ambCatalegCarregat_mostraOpcioBuidaITotesLesAssignatures', 'integracio', () => {
+    const opcions = Array.from(camp('subject-input').options, opcio => opcio.value);
+    comprovar(camp('subject-input').tagName === 'SELECT', "L'assignatura hauria de ser un desplegable.");
+    comprovar(opcions[0] === '' && camp('subject-input').value === '', 'Hauria de començar sense cap assignatura seleccionada.');
+    comprovar(JSON.stringify(opcions.slice(1)) === JSON.stringify(serveiAcademic.getCataleg().map(assignatura => assignatura.nom)),
+      'Hauria de mostrar exactament les assignatures del catàleg.');
+  });
+  afegirProva('desplegableAssignatura_ambValorFora_delCataleg_quedaSenseSeleccio', 'integracio', async () => {
+    await consultar('ALU001', 'Assignatura Inexistent');
+    comprovar(camp('subject-input').value === '', 'No hauria de permetre seleccionar un valor fora del catàleg.');
+    comprovar(camp('subject-error').textContent === "Introdueix el nom de l'assignatura.", "Hauria d'exigir una assignatura.");
+  });
+  afegirProva('consulta_ambIdentificadorAmbEspaisIMinuscules_mostraDadesCanoniquesIMatricula', 'integracio', async () => {
+    await consultar(' alu001 ', 'Automatització RPA');
     comprovar(camp('result-student').textContent === 'ALU001', 'Hauria de mostrar el codi normalitzat.');
     comprovar(camp('result-student-name').textContent === 'Ana García', "Hauria de mostrar el nom de l'alumne.");
     comprovar(camp('result-subject').textContent === 'Automatització RPA', 'Hauria de mostrar el nom canònic.');
@@ -222,9 +234,9 @@ async function executarProvesAcademiques() {
     comprovar(camp('result-seats').textContent === '0', 'Hauria de representar zero places, no un valor absent.');
     comprovar(camp('enrollment-section').hidden && camp('message').classList.contains('warning'), 'Hauria de mostrar un avís sense permetre matrícula.');
   });
-  afegirProva('consulta_ambTextHTML_mostraTextSenseExecutarMarcatge', 'integracio', async () => {
-    await consultar('ALU007', '<img src=x onerror="throw new Error()">');
-    comprovar(camp('result-subject').textContent.startsWith('<img'), 'Hauria de mostrar el nom com a text.');
+  afegirProva('consulta_ambTextHTMLAlIdentificador_mostraTextSenseExecutarMarcatge', 'integracio', async () => {
+    await consultar('<img src=x onerror="throw new Error()">', 'Power Automate');
+    comprovar(camp('result-student').textContent.startsWith('<IMG'), "Hauria de mostrar l'identificador com a text.");
     comprovar(!camp('result-panel').querySelector('img'), "No hauria de crear elements a partir de les dades d'entrada.");
   });
   afegirProva('matricula_senseConsultaValida_noConsumeixPlaces', 'integracio', async () => {
@@ -272,7 +284,7 @@ async function executarProvesAcademiques() {
     comprovar(camp('subject-catalog').firstElementChild.textContent.includes('9 places'), 'Hauria de sincronitzar el catàleg amb les places.');
   });
   afegirProva('consulta_ambMatriculaJaConfirmada_mostraReferenciaIImpedeixDuplicat', 'integracio', async () => {
-    await consultar('ALU001', 'Automatitzacio RPA');
+    await consultar('ALU001', 'Automatització RPA');
     comprovar(camp('result-course-status').textContent === 'Matriculada', 'Hauria de detectar una matrícula existent.');
     comprovar(camp('message').textContent.includes('MAT-000001') && camp('enrollment-section').hidden,
       'Hauria de mostrar la referència anterior i impedir duplicats.');

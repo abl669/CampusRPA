@@ -10,7 +10,7 @@ const MARCATGE_APLICACIO = `
       <section id="academic-search" class="targeta" aria-labelledby="search-title" tabindex="-1">
         <p class="pas">Pas 1 · Consulta</p>
         <h2 id="search-title">Consulta una sol·licitud</h2>
-        <p class="ajuda">Introdueix l'identificador i el nom de l'assignatura. S'accepten majúscules, minúscules i noms sense accents.</p>
+        <p class="ajuda">Introdueix l'identificador de l'alumne i tria l'assignatura del desplegable.</p>
         <form id="academic-form" novalidate>
           <div class="grid">
             <div>
@@ -23,10 +23,9 @@ const MARCATGE_APLICACIO = `
             </div>
             <div>
               <label for="subject-input">Assignatura</label>
-              <input id="subject-input" name="subject" type="text" placeholder="Ex.: Automatització RPA"
-                autocomplete="off" maxlength="100" list="subject-options" required
-                aria-describedby="subject-help subject-error">
-              <datalist id="subject-options"></datalist>
+              <select id="subject-input" name="subject" required aria-describedby="subject-help subject-error">
+                <option value="">Selecciona una assignatura</option>
+              </select>
               <span id="subject-help" class="camp-ajuda">Tria una assignatura del catàleg.</span>
               <span id="subject-error" class="camp-error" hidden></span>
             </div>
@@ -66,6 +65,12 @@ const MARCATGE_APLICACIO = `
       </section>
     </div>
     <aside aria-label="Ajuda i dades de prova">
+      <section class="targeta" aria-labelledby="random-title">
+        <h2 id="random-title">Mode aleatori</h2>
+        <p class="ajuda">Si està activat, cada càrrega d'index.html obre un escenari a l'atzar: normal o amb error.</p>
+        <button id="random-mode-button" class="boto secundari" type="button" aria-pressed="true">Mode aleatori: activat</button>
+        <p id="random-mode-status" class="ajuda" role="status" aria-live="polite"></p>
+      </section>
       <section class="targeta" aria-labelledby="catalog-title">
         <h2 id="catalog-title">Catàleg d'assignatures</h2>
         <p class="ajuda">Les places s'actualitzen després de cada matrícula.</p>
@@ -78,8 +83,8 @@ const MARCATGE_APLICACIO = `
           <button class="cas" type="button" data-alumne="ALU001" data-assignatura="Automatització RPA">
             <strong>Matrícula disponible</strong><span>ALU001 · Automatització RPA</span>
           </button>
-          <button class="cas" type="button" data-alumne="ALU007" data-assignatura="Assignatura Inexistent">
-            <strong>Assignatura no trobada</strong><span>ALU007 · Assignatura Inexistent</span>
+          <button class="cas" type="button" data-alumne="ALU007" data-assignatura="">
+            <strong>Assignatura no seleccionada</strong><span>ALU007 · sense assignatura</span>
           </button>
           <button class="cas" type="button" data-alumne="ALU008" data-assignatura="Bases de Dades">
             <strong>Sense places</strong><span>ALU008 · Bases de Dades</span>

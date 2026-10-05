@@ -151,6 +151,45 @@ async function executarProvesEscenaris() {
     comprovar(places(serveiPersistent(), 'PA-201') === 15, 'Hauria de restaurar les places inicials.');
   });
 
+  afegirProva('triarDestiAleatori_ambValorsExtrems_retornaPrimerIUltimDesti', 'unitat', () => {
+    comprovar(triarDestiAleatori(() => 0) === null, 'El valor 0 hauria de quedar-se en mode normal.');
+    comprovar(triarDestiAleatori(() => 0.999999) === 'ErrorServei.html', "El valor màxim hauria de triar l'últim destí.");
+    comprovar(triarDestiAleatori(() => 1) === 'ErrorServei.html' && triarDestiAleatori(() => -1) === null,
+      'Els valors fora de rang no haurien de retornar destins inexistents.');
+  });
+  afegirProva('triarDestiAleatori_ambGeneradorUniforme_potArribarATotsElsDestins', 'unitat', () => {
+    const destins = new Set();
+    for (let posicio = 0; posicio < DESTINS_ALEATORIS.length; posicio += 1) {
+      destins.add(triarDestiAleatori(() => (posicio + 0.5) / DESTINS_ALEATORIS.length));
+    }
+    comprovar(destins.size === DESTINS_ALEATORIS.length, 'Cada destí hauria de tenir la seva franja de probabilitat.');
+    comprovar(!DESTINS_ALEATORIS.includes('index.html'), "No hauria de redirigir a index.html per evitar bucles.");
+  });
+  afegirProva('setModeAleatori_ambActivacioIDesactivacio_esDesaIEsLlegeix', 'unitat', () => {
+    const anterior = localStorage.getItem(CLAU_MODE_ALEATORI);
+    try {
+      localStorage.removeItem(CLAU_MODE_ALEATORI);
+      comprovar(isModeAleatoriActiu(), 'Per defecte hauria d\'estar activat.');
+      comprovar(setModeAleatori(false) && !isModeAleatoriActiu(), 'Hauria de poder-se desactivar.');
+      comprovar(setModeAleatori(true) && isModeAleatoriActiu(), 'Hauria de poder-se reactivar.');
+      localStorage.setItem(CLAU_MODE_ALEATORI, 'valor-manipulat');
+      comprovar(isModeAleatoriActiu(), 'Un valor desconegut hauria de mantenir el comportament per defecte.');
+    } finally {
+      if (anterior === null) localStorage.removeItem(CLAU_MODE_ALEATORI);
+      else localStorage.setItem(CLAU_MODE_ALEATORI, anterior);
+    }
+  });
+  afegirProva('reiniciarDades_ambModeAleatoriDesactivat_conservaLaPreferencia', 'unitat', () => {
+    const anterior = isModeAleatoriActiu();
+    try {
+      setModeAleatori(false);
+      reiniciarDades();
+      comprovar(!isModeAleatoriActiu(), 'Reiniciar dades no hauria de canviar el mode aleatori.');
+    } finally {
+      setModeAleatori(anterior);
+    }
+  });
+
   const provesIntegracio = {
     normal: () => {
       afegirProva('matricula_ambPaginaNormal_esDesaPerALesAltresPagines', 'integracio', async () => {
@@ -199,7 +238,7 @@ async function executarProvesEscenaris() {
       afegirProva('consulta_ambEscenariIntermitent_fallaElPrimerIntentIElReintentFunciona', 'integracio', async () => {
         await consultar('ALU001', 'Power Automate');
         comprovar(esErrorTecnic() && camp('result-seats').textContent === '—', 'El primer intent hauria de ser un error tècnic.');
-        await consultar('ALU001', 'power automate');
+        await consultar('ALU001', 'Power Automate');
         comprovar(!esErrorTecnic() && !camp('enrollment-section').hidden, 'El reintent hauria de funcionar.');
       });
       afegirProva('consulta_ambEscenariIntermitentIAltraCombinacio_tornaAFallar', 'integracio', async () => {
@@ -207,8 +246,8 @@ async function executarProvesEscenaris() {
         comprovar(esErrorTecnic(), 'Cada combinació nova hauria de fallar el primer cop.');
       });
       afegirProva('consulta_ambErrorDeValidacio_noConsumeixLaFallada', 'integracio', async () => {
-        await consultar('ALU003', 'Inexistent');
-        comprovar(!esErrorTecnic() && camp('subject-error').textContent === 'Assignatura no trobada.',
+        await consultar('ALU999', 'Power Automate');
+        comprovar(!esErrorTecnic() && camp('student-error').textContent === 'Alumne no trobat.',
           'Els errors de validació no haurien de ser errors tècnics.');
       });
     },
@@ -250,6 +289,21 @@ async function executarProvesEscenaris() {
   reiniciarDades();
   if (typeof invalidarConsulta === 'function' && camp('student-input')) invalidarConsulta();
   if (Object.hasOwn(provesIntegracio, escenariPagina)) provesIntegracio[escenariPagina]();
+  afegirProva('botoModeAleatori_ambClics_commutaIAnunciaElCanvi', 'integracio', async () => {
+    await esperarCondicio(() => camp('random-mode-button'), 130000, "Hauria d'existir el botó del mode aleatori.");
+    const boto = camp('random-mode-button');
+    const anterior = isModeAleatoriActiu();
+    try {
+      boto.click();
+      comprovar(isModeAleatoriActiu() === !anterior && boto.getAttribute('aria-pressed') === String(!anterior),
+        'El botó hauria de commutar el mode i el seu estat accessible.');
+      comprovar(camp('random-mode-status').textContent.length > 0, "Hauria d'anunciar el canvi.");
+      boto.click();
+      comprovar(isModeAleatoriActiu() === anterior, 'Un segon clic hauria de restaurar el mode.');
+    } finally {
+      setModeAleatori(anterior);
+    }
+  });
 
   for (const prova of proves) {
     try {

@@ -7,6 +7,7 @@
   <meta name="robots" content="noindex">
   <title>503 | Servei no disponible</title>
   <link rel="stylesheet" href="css/campusrpa.css">
+  <script defer src="js/aleatori.js"></script>
 </head>
 <body data-escenari="serveiNoDisponible">
 <header class="capcalera">
@@ -27,7 +28,9 @@
       El campus virtual està en manteniment. Torna-ho a provar més tard.</p>
     <div class="accions">
       <a id="retry-link" class="boto" href="index.html">Tornar a provar</a>
+      <button id="random-mode-button" class="boto secundari" type="button" aria-pressed="true">Mode aleatori: activat</button>
     </div>
+    <p id="random-mode-status" class="ajuda" role="status" aria-live="polite"></p>
   </section>
 </main>
 <footer>Pàgina d'error simulada: no existeix cap formulari, de manera que el robot ha de detectar-la i aturar-se o reintentar.</footer>

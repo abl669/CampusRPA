@@ -8,7 +8,7 @@ const IDS_ELEMENTS = [
   'result-student-name', 'result-degree', 'result-student-status', 'result-subject',
   'result-subject-details', 'result-subject-credits', 'result-seats', 'result-course-status', 'message',
   'enrollment-section', 'enrollment-note', 'note-error', 'create-enrollment-button',
-  'subject-options', 'subject-catalog'
+  'subject-catalog'
 ];
 
 let escenari = ESCENARIS.normal;
@@ -36,16 +36,27 @@ function mostrarErrorCamp(idCamp, idError, missatge = '') {
 }
 
 /**
+ * Actualitza el desplegable d'assignatures conservant la selecció actual.
+ * @param {Array<{nom: string}>} cataleg Assignatures disponibles.
+ * @returns {void}
+ */
+function mostrarOpcionsAssignatura(cataleg) {
+  const desplegable = elements['subject-input'];
+  const seleccionada = desplegable.value;
+  const opcioBuida = new Option('Selecciona una assignatura', '');
+  desplegable.replaceChildren(opcioBuida, ...cataleg.map(assignatura => new Option(assignatura.nom, assignatura.nom)));
+  desplegable.value = cataleg.some(assignatura => assignatura.nom === seleccionada) ? seleccionada : '';
+}
+
+/**
  * Actualitza les opcions de consulta i les places visibles del catàleg.
  * @returns {void}
  */
 function mostrarCataleg() {
-  elements['subject-options'].replaceChildren();
+  const cataleg = serveiAcademic.getCataleg();
+  mostrarOpcionsAssignatura(cataleg);
   elements['subject-catalog'].replaceChildren();
-  for (const assignatura of serveiAcademic.getCataleg()) {
-    const opcio = document.createElement('option');
-    opcio.value = assignatura.nom;
-    elements['subject-options'].append(opcio);
+  for (const assignatura of cataleg) {
     const fila = document.createElement('li');
     const nom = document.createElement('strong');
     const detall = document.createElement('span');
@@ -314,6 +325,7 @@ function muntarAplicacio(contenidor) {
   renderitzarAplicacio(contenidor);
   elements = Object.fromEntries(IDS_ELEMENTS.map(id => [id, document.getElementById(id)]));
   connectarEsdeveniments();
+  connectarBotoModeAleatori(document.getElementById('random-mode-button'), document.getElementById('random-mode-status'));
   mostrarCataleg();
 }
 

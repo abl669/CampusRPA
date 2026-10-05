@@ -6,6 +6,7 @@
   <meta name="color-scheme" content="light">
   <title>CampusRPA | Escenaris de prova</title>
   <link rel="stylesheet" href="css/campusrpa.css">
+  <script defer src="js/aleatori.js"></script>
   <script defer src="js/model.js"></script>
   <script defer src="js/escenaris.js"></script>
   <script defer src="js/portal.js"></script>
@@ -25,6 +26,18 @@
   <h1>Escenaris de prova</h1>
   <p class="subtitle">Cada pàgina té el mateix formulari i els mateixos selectors que <a href="index.html">index.html</a>,
     però simula un problema tècnic diferent. El robot només ha de canviar la URL.</p>
+
+  <section class="targeta" aria-labelledby="random-title">
+    <h2 id="random-title">Mode aleatori</h2>
+    <p class="ajuda">Activat per defecte. Cada càrrega d'<a href="index.html">index.html</a> obre a l'atzar, amb la mateixa
+      probabilitat, el mode normal o una de les 7 pàgines d'error (s'usa <code>location.replace</code>).
+      La preferència es desa en aquest navegador. Per obrir index.html sense redirecció només una vegada,
+      usa <a href="index.html?aleatori=0"><code>index.html?aleatori=0</code></a>.</p>
+    <div class="accions">
+      <button id="random-mode-button" class="boto secundari" type="button" aria-pressed="true">Mode aleatori: activat</button>
+      <span id="random-mode-status" class="estat-consulta" role="status" aria-live="polite"></span>
+    </div>
+  </section>
 
   <section class="targeta" aria-labelledby="dades-title">
     <h2 id="dades-title">Dades de la simulació</h2>
