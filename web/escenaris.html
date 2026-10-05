@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <title>CampusRPA | Escenaris de prova</title>
+  <link rel="stylesheet" href="css/campusrpa.css">
+  <script defer src="js/model.js"></script>
+  <script defer src="js/escenaris.js"></script>
+  <script defer src="js/portal.js"></script>
+</head>
+<body>
+<a class="salt" href="#contingut">Ves al contingut principal</a>
+<header class="capcalera">
+  <div class="capcalera-interior">
+    <a class="marca" href="index.html">CampusRPA</a>
+    <nav class="navegacio" aria-label="Navegació principal">
+      <a href="index.html">Consulta</a>
+      <a href="escenaris.html" aria-current="page">Escenaris</a>
+    </nav>
+  </div>
+</header>
+<main id="contingut" tabindex="-1">
+  <h1>Escenaris de prova</h1>
+  <p class="subtitle">Cada pàgina té el mateix formulari i els mateixos selectors que <a href="index.html">index.html</a>,
+    però simula un problema tècnic diferent. El robot només ha de canviar la URL.</p>
+
+  <section class="targeta" aria-labelledby="dades-title">
+    <h2 id="dades-title">Dades de la simulació</h2>
+    <p class="ajuda">Les matrícules, les places i les fallades ja consumides es comparteixen entre totes les pàgines
+      i es conserven en recarregar. Reinicia-les abans de cada execució de prova.
+      També pots obrir qualsevol pàgina amb <code>?reiniciar=1</code>.</p>
+    <div class="accions">
+      <button id="reset-data-button" class="boto" type="button">Reiniciar dades</button>
+      <span id="reset-status" class="estat-consulta" role="status" aria-live="polite"></span>
+    </div>
+  </section>
+
+  <section class="targeta" aria-labelledby="llista-title">
+    <h2 id="llista-title">Pàgines disponibles</h2>
+    <p class="ajuda">Els escenaris lents accepten <code>?segons=N</code> (1–120). Ex.: <code>ErrorCarga.html?segons=5</code>.</p>
+    <ul class="escenaris">
+      <li><a href="index.html">index.html</a>
+        <p class="ajuda">Funcionament normal. Consulta en 0,6 s i matrícula en 0,7 s.</p></li>
+      <li><a href="ErrorCarga.html">ErrorCarga.html</a>
+        <p class="ajuda">La pàgina mostra «Carregant…» 10 s abans que aparegui el formulari.
+          L'esdeveniment de càrrega del navegador arriba abans: el robot ha d'esperar l'element.</p></li>
+      <li><a href="ErrorConsultaLenta.html">ErrorConsultaLenta.html</a>
+        <p class="ajuda">Cada consulta tarda 10 s. Supera un timeout de 3 s, però acaba responent.</p></li>
+      <li><a href="ErrorSenseResposta.html">ErrorSenseResposta.html</a>
+        <p class="ajuda">Les consultes no responen mai. El robot ha d'aplicar timeout, registrar l'error i continuar.</p></li>
+      <li><a href="ErrorIntermitent.html">ErrorIntermitent.html</a>
+        <p class="ajuda">La primera consulta de cada alumne i assignatura falla amb un error tècnic; el reintent funciona.</p></li>
+      <li><a href="ErrorMatricula.html">ErrorMatricula.html</a>
+        <p class="ajuda">El primer intent de matrícula de cada combinació falla <strong>abans</strong> de registrar-la.
+          Cal tornar a consultar i reintentar.</p></li>
+      <li><a href="ErrorConfirmacio.html">ErrorConfirmacio.html</a>
+        <p class="ajuda">La matrícula es registra, però la confirmació no arriba mai. Després del timeout,
+          el robot ha de recarregar, tornar a consultar i recuperar la referència, sense duplicar-la.</p></li>
+      <li><a href="ErrorServei.html">ErrorServei.html</a>
+        <p class="ajuda">Pàgina 503 sense formulari. El robot ha de detectar-la i no continuar el procés.</p></li>
+    </ul>
+  </section>
+</main>
+<footer>Simulació local per a formació. Les dades es desen només en aquest navegador.</footer>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="robots" content="noindex">
+  <title>503 | Servei no disponible</title>
+  <link rel="stylesheet" href="css/campusrpa.css">
+</head>
+<body data-escenari="serveiNoDisponible">
+<header class="capcalera">
+  <div class="capcalera-interior">
+    <a class="marca" href="index.html">CampusRPA</a>
+    <nav class="navegacio" aria-label="Navegació principal">
+      <a href="index.html">Consulta</a>
+      <a href="escenaris.html">Escenaris</a>
+      <span class="distintiu escenari" data-testid="scenario-badge">Escenari: servei no disponible</span>
+    </nav>
+  </div>
+</header>
+<main id="aplicacio">
+  <section class="targeta" aria-labelledby="error-title">
+    <p id="error-code" class="codi-error">503</p>
+    <h1 id="error-title">Servei no disponible</h1>
+    <p id="message" class="message error" role="alert" data-tipus-error="tecnic">
+      El campus virtual està en manteniment. Torna-ho a provar més tard.</p>
+    <div class="accions">
+      <a id="retry-link" class="boto" href="index.html">Tornar a provar</a>
+    </div>
+  </section>
+</main>
+<footer>Pàgina d'error simulada: no existeix cap formulari, de manera que el robot ha de detectar-la i aturar-se o reintentar.</footer>
+</body>
+</html>

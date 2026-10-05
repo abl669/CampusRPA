@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Simulador acadèmic per practicar consultes i matrícules amb Power Automate Desktop.">
+  <title>CampusRPA | Consulta i matrícula</title>
+  <link rel="stylesheet" href="css/campusrpa.css">
+  <script defer src="js/model.js"></script>
+  <script defer src="js/escenaris.js"></script>
+  <script defer src="js/plantilla.js"></script>
+  <script defer src="js/aplicacio.js"></script>
+</head>
+<body data-escenari="normal">
+<a class="salt" href="#aplicacio">Ves al contingut principal</a>
+<header class="capcalera">
+  <div class="capcalera-interior">
+    <a class="marca" href="index.html">CampusRPA</a>
+    <nav class="navegacio" aria-label="Navegació principal">
+      <a href="index.html" aria-current="page">Consulta</a>
+      <a href="escenaris.html">Escenaris</a>
+      <span class="distintiu">Entorn de pràctiques</span>
+    </nav>
+  </div>
+</header>
+<main id="aplicacio" aria-busy="true" tabindex="-1">
+  <noscript><p class="message error">Cal activar JavaScript per consultar i formalitzar matrícules.</p></noscript>
+</main>
+<footer>Simulació local: no es connecta a cap servei. Les matrícules i les places es desen en aquest navegador
+  i es comparteixen entre totes les pàgines del simulador. Per reiniciar-les, ves a «Escenaris».
+  Les referències no són justificants oficials.</footer>
+</body>
+</html>
