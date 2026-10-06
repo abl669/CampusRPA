@@ -75,59 +75,59 @@ async function executarProvesEscenaris() {
   });
   afegirProva('registrarPrimeraFallada_ambMateixaCombinacio_nomesFallaLaPrimeraVegada', 'unitat', () => {
     const registre = new RegistreIncidencies();
-    comprovar(registre.registrarPrimeraFallada('consulta', 'ALU001:RPA-101'), 'El primer intent hauria de fallar.');
-    comprovar(!registre.registrarPrimeraFallada('consulta', 'ALU001:RPA-101'), 'El reintent hauria de funcionar.');
-    comprovar(registre.registrarPrimeraFallada('consulta', 'ALU002:RPA-101'), 'Una altra combinació hauria de fallar el primer cop.');
-    comprovar(registre.registrarPrimeraFallada('matricula', 'ALU001:RPA-101'), 'Les operacions haurien de ser independents.');
+    comprovar(registre.registrarPrimeraFallada('consulta', 'ALU011:RPA001'), 'El primer intent hauria de fallar.');
+    comprovar(!registre.registrarPrimeraFallada('consulta', 'ALU011:RPA001'), 'El reintent hauria de funcionar.');
+    comprovar(registre.registrarPrimeraFallada('consulta', 'ALU012:RPA001'), 'Una altra combinació hauria de fallar el primer cop.');
+    comprovar(registre.registrarPrimeraFallada('matricula', 'ALU011:RPA001'), 'Les operacions haurien de ser independents.');
   });
   afegirProva('registrarPrimeraFallada_ambEstatManipulat_noProvocaErrors', 'unitat', () => {
-    for (const estat of [{ consulta: 'ALU001:RPA-101' }, { consulta: [1, null, {}] }, 'text', 42]) {
+    for (const estat of [{ consulta: 'ALU011:RPA001' }, { consulta: [1, null, {}] }, 'text', 42]) {
       const magatzem = new MagatzemMemoria();
       magatzem.desar(estat);
-      comprovar(new RegistreIncidencies(magatzem).registrarPrimeraFallada('consulta', 'ALU001:RPA-101'),
+      comprovar(new RegistreIncidencies(magatzem).registrarPrimeraFallada('consulta', 'ALU011:RPA001'),
         "Hauria d'ignorar un registre manipulat.");
     }
   });
   afegirProva('serveiAcademic_ambMagatzemCompartit_conservaMatriculesEntreInstancies', 'unitat', () => {
     const magatzem = new MagatzemMemoria();
-    const referencia = new ServeiAcademic(magatzem).formalitzar('ALU001', 'Power Automate').matricula.referencia;
+    const referencia = new ServeiAcademic(magatzem).formalitzar('ALU011', 'Power Automate').matricula.referencia;
     const altreServei = new ServeiAcademic(magatzem);
-    const resultat = altreServei.consultar('alu001', 'power automate');
+    const resultat = altreServei.consultar('alu011', 'power automate');
     comprovar(resultat.estatAssignatura === 'Matriculada' && resultat.matricula.referencia === referencia,
       'Una altra pàgina hauria de veure la matrícula desada.');
-    comprovar(places(altreServei, 'PA-201') === 14, 'Hauria de conservar les places descomptades.');
+    comprovar(places(altreServei, 'PA001') === 14, 'Hauria de conservar les places descomptades.');
   });
   afegirProva('serveiAcademic_ambEstatManipulat_descartaDadesInvalides', 'unitat', () => {
     const magatzem = new MagatzemMemoria();
     magatzem.desar({
-      places: { 'RPA-101': -5, 'PA-201': 999, 'WEB-210': '3', 'GP-110': 4.5, 'BD-301': 0, __proto__: { 'RPA-101': 1 } },
+      places: { 'RPA001': -5, 'PA001': 999, 'WEB001': '3', 'GP-110': 4.5, 'BDD001': 0, __proto__: { 'RPA001': 1 } },
       matricules: [
-        { referencia: '<img>', codiAlumne: 'ALU001', codiAssignatura: 'RPA-101', observacio: '' },
-        { referencia: 'MAT-000001', codiAlumne: 'ALU999', codiAssignatura: 'RPA-101', observacio: '' },
-        { referencia: 'MAT-000002', codiAlumne: 'ALU001', codiAssignatura: 'XXX', observacio: '' },
-        { referencia: 'MAT-000003', codiAlumne: 'ALU001', codiAssignatura: 'PA-201', observacio: 'x'.repeat(501) },
+        { referencia: '<img>', codiAlumne: 'ALU011', codiAssignatura: 'RPA001', observacio: '' },
+        { referencia: 'MAT-000001', codiAlumne: 'ALU999', codiAssignatura: 'RPA001', observacio: '' },
+        { referencia: 'MAT-000002', codiAlumne: 'ALU011', codiAssignatura: 'XXX', observacio: '' },
+        { referencia: 'MAT-000003', codiAlumne: 'ALU011', codiAssignatura: 'PA001', observacio: 'x'.repeat(501) },
         null
       ]
     });
     const servei = new ServeiAcademic(magatzem);
-    comprovar(places(servei, 'RPA-101') === 10 && places(servei, 'PA-201') === 15 &&
-      places(servei, 'WEB-210') === 5 && places(servei, 'GP-110') === 20, 'Hauria de restaurar places invàlides.');
+    comprovar(places(servei, 'RPA001') === 20 && places(servei, 'PA001') === 15 &&
+      places(servei, 'WEB001') === 12 && places(servei, 'GP-110') === 20, 'Hauria de restaurar places invàlides.');
     for (const assignatura of ['Automatització RPA', 'Power Automate']) {
-      comprovar(servei.consultar('ALU001', assignatura).potMatricular, 'Hauria de descartar matrícules invàlides.');
+      comprovar(servei.consultar('ALU011', assignatura).potMatricular, 'Hauria de descartar matrícules invàlides.');
     }
   });
   afegirProva('serveiAcademic_ambEstatIllegible_comencaAmbDadesInicials', 'unitat', () => {
     for (const estat of [null, 'text', 42, [], { places: null, matricules: 'x' }]) {
       const magatzem = new MagatzemMemoria();
       if (estat !== null) magatzem.desar(estat);
-      comprovar(places(new ServeiAcademic(magatzem), 'RPA-101') === 10, 'Hauria de començar amb les dades inicials.');
+      comprovar(places(new ServeiAcademic(magatzem), 'RPA001') === 20, 'Hauria de començar amb les dades inicials.');
     }
   });
   afegirProva('formalitzar_ambReferenciesDesades_continuaLaNumeracio', 'unitat', () => {
     const magatzem = new MagatzemMemoria();
-    magatzem.desar({ places: { 'RPA-101': 9 },
-      matricules: [{ referencia: 'MAT-000005', codiAlumne: 'ALU002', codiAssignatura: 'RPA-101', observacio: '' }] });
-    const resultat = new ServeiAcademic(magatzem).formalitzar('ALU001', 'Automatització RPA');
+    magatzem.desar({ places: { 'RPA001': 9 },
+      matricules: [{ referencia: 'MAT-000005', codiAlumne: 'ALU012', codiAssignatura: 'RPA001', observacio: '' }] });
+    const resultat = new ServeiAcademic(magatzem).formalitzar('ALU011', 'Automatització RPA');
     comprovar(resultat.matricula.referencia === 'MAT-000006', 'No hauria de reutilitzar números de referència.');
   });
   afegirProva('magatzemLocal_ambJsonCorrupte_retornaNullSenseExcepcio', 'unitat', () => {
@@ -143,12 +143,12 @@ async function executarProvesEscenaris() {
     }
   });
   afegirProva('reiniciarDades_ambDadesIFalladesDesades_lesEsborra', 'unitat', () => {
-    serveiPersistent().formalitzar('ALU003', 'Power Automate');
-    new RegistreIncidencies(new MagatzemLocal(CLAU_INCIDENCIES)).registrarPrimeraFallada('consulta', 'ALU003:PA-201');
+    serveiPersistent().formalitzar('ALU013', 'Power Automate');
+    new RegistreIncidencies(new MagatzemLocal(CLAU_INCIDENCIES)).registrarPrimeraFallada('consulta', 'ALU013:PA001');
     reiniciarDades();
     comprovar(localStorage.getItem(CLAU_DADES) === null && localStorage.getItem(CLAU_INCIDENCIES) === null,
       'Hauria d\'esborrar totes les claus de la simulació.');
-    comprovar(places(serveiPersistent(), 'PA-201') === 15, 'Hauria de restaurar les places inicials.');
+    comprovar(places(serveiPersistent(), 'PA001') === 15, 'Hauria de restaurar les places inicials.');
   });
 
   const generadorSequencial = (valors) => { let posicio = 0; return () => valors[posicio++]; };
@@ -208,9 +208,9 @@ async function executarProvesEscenaris() {
   const provesIntegracio = {
     normal: () => {
       afegirProva('matricula_ambPaginaNormal_esDesaPerALesAltresPagines', 'integracio', async () => {
-        await consultar('ALU002', 'Gestió de Processos');
+        await consultar('ALU012', 'Gestió de Processos');
         await formalitzar();
-        const resultat = serveiPersistent().consultar('ALU002', 'Gestió de Processos');
+        const resultat = serveiPersistent().consultar('ALU012', 'Gestió de Processos');
         comprovar(resultat.estatAssignatura === 'Matriculada' && resultat.matricula.referencia === 'MAT-000001',
           'La matrícula hauria de quedar desada per a qualsevol pàgina.');
       });
@@ -222,14 +222,14 @@ async function executarProvesEscenaris() {
         comprovar(document.readyState === 'complete', 'El navegador ja hauria de considerar la pàgina carregada.');
         await esperarCondicio(() => camp('student-input'), 130000, 'El formulari hauria d\'aparèixer després del retard.');
         comprovar(!camp('loading-indicator'), "Hauria de retirar l'indicador de càrrega.");
-        await consultar('ALU001', 'Power Automate');
+        await consultar('ALU011', 'Power Automate');
         comprovar(!camp('enrollment-section').hidden, 'Després de carregar, hauria de funcionar amb normalitat.');
       });
     },
     consultaLenta: () => {
       afegirProva('consulta_ambEscenariLent_superaElTimeoutPeroRespon', 'integracio', async () => {
         const inici = performance.now();
-        enviarConsulta('ALU001', 'Power Automate');
+        enviarConsulta('ALU011', 'Power Automate');
         await esperar(900);
         comprovar(camp('search-button').disabled && camp('result-panel').hidden, 'La consulta hauria de continuar en curs.');
         await esperarOperacio(segonsEscenari * 1000 + 2000);
@@ -239,25 +239,25 @@ async function executarProvesEscenaris() {
     },
     senseResposta: () => {
       afegirProva('consulta_ambEscenariSenseResposta_noRespon', 'integracio', async () => {
-        enviarConsulta('ALU001', 'Power Automate');
+        enviarConsulta('ALU011', 'Power Automate');
         await esperar(1500);
         comprovar(camp('search-button').disabled && camp('result-panel').hidden, 'La consulta no hauria de respondre.');
         comprovar(camp('search-status').textContent.includes('Consultant'), "Hauria de mostrar l'estat d'espera.");
       });
       afegirProva('consulta_ambEsperaICanviDeDades_recuperaElsControls', 'integracio', async () => {
-        introduir('student-input', 'ALU002');
+        introduir('student-input', 'ALU012');
         comprovar(!camp('search-button').disabled && !enCurs, 'Canviar les dades hauria de cancel·lar l\'espera.');
       });
     },
     intermitent: () => {
       afegirProva('consulta_ambEscenariIntermitent_fallaElPrimerIntentIElReintentFunciona', 'integracio', async () => {
-        await consultar('ALU001', 'Power Automate');
+        await consultar('ALU011', 'Power Automate');
         comprovar(esErrorTecnic() && camp('result-seats').textContent === '—', 'El primer intent hauria de ser un error tècnic.');
-        await consultar('ALU001', 'Power Automate');
+        await consultar('ALU011', 'Power Automate');
         comprovar(!esErrorTecnic() && !camp('enrollment-section').hidden, 'El reintent hauria de funcionar.');
       });
       afegirProva('consulta_ambEscenariIntermitentIAltraCombinacio_tornaAFallar', 'integracio', async () => {
-        await consultar('ALU002', 'Power Automate');
+        await consultar('ALU012', 'Power Automate');
         comprovar(esErrorTecnic(), 'Cada combinació nova hauria de fallar el primer cop.');
       });
       afegirProva('consulta_ambErrorDeValidacio_noConsumeixLaFallada', 'integracio', async () => {
@@ -271,11 +271,11 @@ async function executarProvesEscenaris() {
         await consultar('ALU001', 'Automatització RPA');
         await formalitzar();
         comprovar(esErrorTecnic() && camp('enrollment-section').hidden, 'El primer intent hauria de ser un error tècnic.');
-        comprovar(places(serveiPersistent(), 'RPA-101') === 10, 'La matrícula fallida no hauria de consumir places.');
+        comprovar(places(serveiPersistent(), 'RPA001') === 20, 'La matrícula fallida no hauria de consumir places.');
         await consultar('ALU001', 'Automatització RPA');
         comprovar(!camp('enrollment-section').hidden, 'Hauria de permetre reintentar després de consultar.');
         await formalitzar();
-        comprovar(camp('message').textContent.includes('MAT-000001') && camp('result-seats').textContent === '9',
+        comprovar(camp('message').textContent.includes('MAT-000001') && camp('result-seats').textContent === '19',
           'El reintent hauria de registrar una única matrícula.');
       });
     },
@@ -295,7 +295,7 @@ async function executarProvesEscenaris() {
         await consultar('ALU001', 'Automatització RPA');
         comprovar(camp('result-course-status').textContent === 'Matriculada' && camp('message').textContent.includes('MAT-000001'),
           'Hauria de recuperar la referència en tornar a consultar.');
-        comprovar(camp('result-seats').textContent === '9' && camp('enrollment-section').hidden,
+        comprovar(camp('result-seats').textContent === '19' && camp('enrollment-section').hidden,
           'No hauria de permetre una matrícula duplicada.');
       });
     }

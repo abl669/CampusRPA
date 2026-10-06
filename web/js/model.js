@@ -1,27 +1,48 @@
 'use strict';
 
 /** Clau de localStorage on es desen places i matrícules de la simulació. */
-const CLAU_DADES = 'campusrpa.dades.v1';
+const CLAU_DADES = 'campusrpa.dades.v2';
+
+/** Sol·licituds de CampusRPA_dades.xlsx; els crèdits sol·licitats no són els del catàleg. */
+const SOLLICITUDS_EXCEL = Object.freeze([
+  { identificador: 'SOL001', codiAlumne: 'ALU001', nom: 'Anna Ferrer', assignatura: 'Automatització RPA', credits: 6, email: 'anna.ferrer@campusrpa.test', estat: 'Actiu' },
+  { identificador: 'SOL002', codiAlumne: 'ALU002', nom: 'Pau Vidal', assignatura: 'Power Automate', credits: 12, email: 'pau.vidal@campusrpa.test', estat: 'Actiu' },
+  { identificador: 'SOL003', codiAlumne: 'ALU003', nom: 'Laia Serra', assignatura: 'Bases de dades', credits: 18, email: 'laia.serra@campusrpa.test', estat: 'Actiu' },
+  { identificador: 'SOL004', codiAlumne: 'ALU004', nom: 'Marc Torres', assignatura: 'Arquitectura de sistemes', credits: 30, email: 'marc.torres@campusrpa.test', estat: 'Actiu' },
+  { identificador: 'SOL005', codiAlumne: 'ALU005', nom: 'Núria Costa', assignatura: 'Programació Python', credits: 6, email: 'nuria.costa@campusrpa.test', estat: 'Actiu' },
+  { identificador: 'SOL006', codiAlumne: 'ALU006', nom: 'Joan Riera', assignatura: 'Automatització Web', credits: 0, email: 'joan.riera@campusrpa.test', estat: 'Actiu' },
+  { identificador: 'SOL007', codiAlumne: 'ALU007', nom: 'Clara Bosch', assignatura: 'Assignatura Inexistent', credits: 6, email: 'clara.bosch@campusrpa.test', estat: 'Actiu' },
+  { identificador: 'SOL008', codiAlumne: 'ALU008', nom: 'Enric Pons', assignatura: 'Bases de dades', credits: 6, email: 'enric.pons@campusrpa.test', estat: 'Actiu' },
+  { identificador: 'SOL009', codiAlumne: 'ALU009', nom: 'Marta Soler', assignatura: 'Python avançat', credits: 12, email: 'marta.soler@campusrpa.test', estat: 'Actiu' },
+  { identificador: 'SOL010', codiAlumne: 'ALU010', nom: 'Toni Mir', assignatura: 'Power Automate', credits: 6, email: 'toni.mir@campusrpa.test', estat: 'Bloquejat' }
+].map(sollicitud => Object.freeze(sollicitud)));
 
 const alumnes = new Map([
-  ['ALU001', { nom: 'Ana García', titulacio: 'Grau en Enginyeria', estat: 'Actiu' }],
-  ['ALU002', { nom: 'Bruno López', titulacio: 'Grau en Informàtica', estat: 'Actiu' }],
-  ['ALU003', { nom: 'Carla Martín', titulacio: 'Màster en Transformació Digital', estat: 'Actiu' }],
-  ['ALU004', { nom: 'Diego Serra', titulacio: 'Grau en Enginyeria', estat: 'Actiu' }],
-  ['ALU005', { nom: 'Elena Costa', titulacio: 'Grau en Informàtica', estat: 'Actiu' }],
-  ['ALU006', { nom: 'Ferran Vidal', titulacio: 'Grau en Enginyeria', estat: 'Actiu' }],
-  ['ALU007', { nom: 'Gemma Pons', titulacio: 'Grau en Informàtica', estat: 'Actiu' }],
-  ['ALU008', { nom: 'Hugo Riera', titulacio: 'Grau en Enginyeria', estat: 'Actiu' }],
-  ['ALU009', { nom: 'Irene Mas', titulacio: 'Màster en Transformació Digital', estat: 'Actiu' }],
-  ['ALU010', { nom: 'Joan Serra', titulacio: 'Grau en Enginyeria', estat: 'Bloquejat' }]
+  ...SOLLICITUDS_EXCEL.map(sollicitud => [sollicitud.codiAlumne, {
+    nom: sollicitud.nom, email: sollicitud.email, estat: sollicitud.estat,
+    titulacio: 'Grau en Informàtica'
+  }]),
+  ['ALU011', { nom: 'Ana García', email: 'ana.garcia@campusrpa.test', titulacio: 'Grau en Enginyeria', estat: 'Actiu' }],
+  ['ALU012', { nom: 'Bruno López', email: 'bruno.lopez@campusrpa.test', titulacio: 'Grau en Informàtica', estat: 'Actiu' }],
+  ['ALU013', { nom: 'Carla Martín', email: 'carla.martin@campusrpa.test', titulacio: 'Màster en Transformació Digital', estat: 'Actiu' }],
+  ['ALU014', { nom: 'Diego Serra', email: 'diego.serra@campusrpa.test', titulacio: 'Grau en Enginyeria', estat: 'Actiu' }],
+  ['ALU015', { nom: 'Elena Costa', email: 'elena.costa@campusrpa.test', titulacio: 'Grau en Informàtica', estat: 'Actiu' }],
+  ['ALU016', { nom: 'Ferran Vidal', email: 'ferran.vidal@campusrpa.test', titulacio: 'Grau en Enginyeria', estat: 'Actiu' }],
+  ['ALU017', { nom: 'Gemma Pons', email: 'gemma.pons@campusrpa.test', titulacio: 'Grau en Informàtica', estat: 'Actiu' }],
+  ['ALU018', { nom: 'Hugo Riera', email: 'hugo.riera@campusrpa.test', titulacio: 'Grau en Enginyeria', estat: 'Actiu' }],
+  ['ALU019', { nom: 'Irene Mas', email: 'irene.mas@campusrpa.test', titulacio: 'Màster en Transformació Digital', estat: 'Actiu' }],
+  ['ALU020', { nom: 'Joan Serra', email: 'joan.serra@campusrpa.test', titulacio: 'Grau en Enginyeria', estat: 'Bloquejat' }]
 ]);
 const assignatures = Object.freeze([
-  { nom: 'Automatització RPA', places: 10, credits: 6, codi: 'RPA-101' },
-  { nom: 'Power Automate', places: 15, credits: 6, codi: 'PA-201' },
-  { nom: 'Automatització Web', places: 5, credits: 6, codi: 'WEB-210' },
-  { nom: 'Gestió de Processos', places: 20, credits: 12, codi: 'GP-110' },
-  { nom: 'Bases de Dades', places: 0, credits: 6, codi: 'BD-301' }
-]);
+  { nom: 'Automatització RPA', places: 20, credits: 6, codi: 'RPA001', estat: 'Activa' },
+  { nom: 'Power Automate', places: 15, credits: 12, codi: 'PA001', estat: 'Activa' },
+  { nom: 'Bases de dades', places: 0, credits: 6, codi: 'BDD001', estat: 'Activa' },
+  { nom: 'Arquitectura de sistemes', places: 8, credits: 6, codi: 'SYS001', estat: 'Activa' },
+  { nom: 'Programació Python', places: 25, credits: 6, codi: 'PY001', estat: 'Activa' },
+  { nom: 'Automatització Web', places: 12, credits: 6, codi: 'WEB001', estat: 'Activa' },
+  { nom: 'Python avançat', places: 5, credits: 12, codi: 'PYA001', estat: 'Inactiva' },
+  { nom: 'Gestió de Processos', places: 20, credits: 12, codi: 'GP-110', estat: 'Activa' }
+].map(assignatura => Object.freeze(assignatura)));
 
 /**
  * Normalitza un nom per comparar-lo sense accents, caixa ni espais redundants.
@@ -148,7 +169,7 @@ class ServeiAcademic {
 
   /**
    * Retorna el catàleg actual sense permetre modificar les places internes.
-   * @returns {Array<{nom: string, places: number, credits: number, codi: string}>} Assignatures disponibles.
+   * @returns {Array<{nom: string, places: number, credits: number, codi: string, estat: string}>} Assignatures del catàleg.
    */
   getCataleg() {
     this.#sincronitzar();
@@ -178,14 +199,19 @@ class ServeiAcademic {
       codiAlumne, clauAssignatura, nomAssignatura: assignatura ? assignatura.nom : nomAssignatura.trim(),
       alumne: alumne ? { ...alumne } : null,
       assignatura: assignatura ? { ...assignatura } : null,
+      sollicitud: SOLLICITUDS_EXCEL.find(sollicitud =>
+        sollicitud.codiAlumne === codiAlumne && normalitzar(sollicitud.assignatura) === clauAssignatura) || null,
       errors, potMatricular: false,
-      estatAssignatura: assignatura ? (assignatura.places > 0 ? 'Disponible' : 'Sense places') : 'No trobada',
+      estatAssignatura: assignatura ? (assignatura.estat !== 'Activa' ? 'Inactiva' :
+        (assignatura.places > 0 ? 'Disponible' : 'Sense places')) : 'No trobada',
       missatge: '', tipus: 'error', matricula: null
     };
     if (Object.keys(errors).length) {
       resultat.missatge = Object.values(errors).join(' ');
     } else if (alumne.estat !== 'Actiu') {
       resultat.missatge = "L'expedient de l'alumne està bloquejat. No es pot formalitzar la matrícula.";
+    } else if (assignatura.estat !== 'Activa') {
+      resultat.missatge = "L'assignatura està inactiva. No es pot formalitzar la matrícula.";
     } else {
       const matricula = this.#matricules.get(this.#clauMatricula(codiAlumne, assignatura.codi));
       if (matricula) {

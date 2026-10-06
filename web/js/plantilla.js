@@ -42,6 +42,7 @@ const MARCATGE_APLICACIO = `
         <dl class="dades">
           <div class="row"><dt>Alumne</dt><dd id="result-student">—</dd></div>
           <div class="row"><dt>Nom i cognoms</dt><dd id="result-student-name">—</dd></div>
+          <div class="row"><dt>Correu electrònic</dt><dd id="result-student-email">—</dd></div>
           <div class="row"><dt>Titulació</dt><dd id="result-degree">—</dd></div>
           <div class="row"><dt>Estat de l'expedient</dt><dd id="result-student-status">—</dd></div>
           <div class="row"><dt>Assignatura</dt><dd id="result-subject">—</dd></div>
@@ -78,19 +79,29 @@ const MARCATGE_APLICACIO = `
       </section>
       <section class="targeta" aria-labelledby="examples-title">
         <h2 id="examples-title">Casos de prova</h2>
-        <p class="ajuda">Alumnes disponibles: ALU001–ALU010. Selecciona un cas per omplir el formulari.</p>
+        <p class="ajuda">Alumnes disponibles: ALU001–ALU020. Tots utilitzen el mateix catàleg.
+          Selecciona un cas per omplir el formulari i comprovar una situació diferent.</p>
         <div class="casos">
-          <button class="cas" type="button" data-alumne="ALU001" data-assignatura="Automatització RPA">
-            <strong>Matrícula disponible</strong><span>ALU001 · Automatització RPA</span>
+          <button class="cas" type="button" data-alumne="ALU011" data-assignatura="Automatització RPA">
+            <strong>Matrícula disponible</strong><span>ALU011 · Automatització RPA</span>
           </button>
-          <button class="cas" type="button" data-alumne="ALU007" data-assignatura="">
-            <strong>Assignatura no seleccionada</strong><span>ALU007 · sense assignatura</span>
+          <button class="cas" type="button" data-alumne="ALU017" data-assignatura="">
+            <strong>Assignatura no seleccionada</strong><span>ALU017 · sense assignatura</span>
           </button>
-          <button class="cas" type="button" data-alumne="ALU008" data-assignatura="Bases de Dades">
-            <strong>Sense places</strong><span>ALU008 · Bases de Dades</span>
+          <button class="cas" type="button" data-alumne="ALU007" data-assignatura="Assignatura Inexistent">
+            <strong>Assignatura inexistent</strong><span>ALU007 · Assignatura Inexistent</span>
           </button>
-          <button class="cas" type="button" data-alumne="ALU010" data-assignatura="Power Automate">
-            <strong>Expedient bloquejat</strong><span>ALU010 · Power Automate</span>
+          <button class="cas" type="button" data-alumne="ALU018" data-assignatura="Bases de dades">
+            <strong>Sense places</strong><span>ALU018 · Bases de dades</span>
+          </button>
+          <button class="cas" type="button" data-alumne="ALU009" data-assignatura="Python avançat">
+            <strong>Assignatura inactiva</strong><span>ALU009 · Python avançat</span>
+          </button>
+          <button class="cas" type="button" data-alumne="ALU020" data-assignatura="Power Automate">
+            <strong>Expedient bloquejat</strong><span>ALU020 · Power Automate</span>
+          </button>
+          <button class="cas" type="button" data-alumne="ALU999" data-assignatura="Power Automate">
+            <strong>Alumne inexistent</strong><span>ALU999 · Power Automate</span>
           </button>
         </div>
       </section>

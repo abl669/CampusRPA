@@ -6,6 +6,7 @@ const IDS_ELEMENTS = [
   'academic-form', 'student-input', 'subject-input', 'student-error', 'subject-error',
   'search-button', 'search-status', 'result-panel', 'result-title', 'result-student',
   'result-student-name', 'result-degree', 'result-student-status', 'result-subject',
+  'result-student-email',
   'result-subject-details', 'result-subject-credits', 'result-seats', 'result-course-status', 'message',
   'enrollment-section', 'enrollment-note', 'note-error', 'create-enrollment-button',
   'subject-catalog'
@@ -36,7 +37,7 @@ function mostrarErrorCamp(idCamp, idError, missatge = '') {
 }
 
 /**
- * Actualitza el desplegable d'assignatures conservant la selecció actual.
+ * Actualitza el desplegable compartit i conserva la selecció, inclòs el cas d'assignatura inexistent.
  * @param {Array<{nom: string}>} cataleg Assignatures disponibles.
  * @returns {void}
  */
@@ -45,7 +46,13 @@ function mostrarOpcionsAssignatura(cataleg) {
   const seleccionada = desplegable.value;
   const opcioBuida = new Option('Selecciona una assignatura', '');
   desplegable.replaceChildren(opcioBuida, ...cataleg.map(assignatura => new Option(assignatura.nom, assignatura.nom)));
-  desplegable.value = cataleg.some(assignatura => assignatura.nom === seleccionada) ? seleccionada : '';
+  const noms = new Set(cataleg.map(assignatura => normalitzar(assignatura.nom)));
+  for (const sollicitud of SOLLICITUDS_EXCEL) {
+    if (noms.has(normalitzar(sollicitud.assignatura))) continue;
+    desplegable.add(new Option(sollicitud.assignatura, sollicitud.assignatura));
+    noms.add(normalitzar(sollicitud.assignatura));
+  }
+  desplegable.value = Array.from(desplegable.options).some(opcio => opcio.value === seleccionada) ? seleccionada : '';
 }
 
 /**
@@ -61,7 +68,7 @@ function mostrarCataleg() {
     const nom = document.createElement('strong');
     const detall = document.createElement('span');
     nom.textContent = assignatura.nom;
-    detall.textContent = `${assignatura.codi} · ${assignatura.credits} crèdits · ${assignatura.places} places`;
+    detall.textContent = `${assignatura.codi} · ${assignatura.credits} crèdits · ${assignatura.places} places · ${assignatura.estat}`;
     fila.append(nom, detall);
     elements['subject-catalog'].append(fila);
   }
@@ -127,6 +134,7 @@ function mostrarResultat(resultat) {
   elements['result-panel'].hidden = false;
   elements['result-student'].textContent = resultat.codiAlumne || '—';
   elements['result-student-name'].textContent = resultat.alumne ? resultat.alumne.nom : '—';
+  elements['result-student-email'].textContent = resultat.alumne && resultat.alumne.email ? resultat.alumne.email : '—';
   elements['result-degree'].textContent = resultat.alumne ? resultat.alumne.titulacio : '—';
   const estatAlumne = resultat.alumne ? resultat.alumne.estat : '—';
   elements['result-student-status'].textContent = estatAlumne;
