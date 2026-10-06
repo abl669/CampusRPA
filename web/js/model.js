@@ -177,6 +177,18 @@ class ServeiAcademic {
   }
 
   /**
+   * Retorna les matrícules registrades amb les dades de l'alumne i l'assignatura.
+   * @returns {Array<object>} Historial independent de l'estat intern.
+   */
+  getMatricules() {
+    this.#sincronitzar();
+    return Array.from(this.#matricules.values(), matricula => ({
+      ...matricula, alumne: { ...alumnes.get(matricula.codiAlumne) },
+      assignatura: { ...assignatures.find(assignatura => assignatura.codi === matricula.codiAssignatura) }
+    }));
+  }
+
+  /**
    * Comprova les dades, l'expedient, les places i l'existència d'una matrícula.
    * @param {string} identificador Identificador de l'alumne.
    * @param {string} nomAssignatura Nom de l'assignatura.
@@ -236,12 +248,18 @@ class ServeiAcademic {
    * @param {string} identificador Identificador de l'alumne.
    * @param {string} nomAssignatura Nom de l'assignatura.
    * @param {string} observacio Observació opcional, de fins a 500 caràcters.
+   * @param {object|null} opcions Opcions de la pràctica avançada o null per al mode bàsic.
    * @returns {object} Resultat actualitzat amb la matrícula o l'error de validació.
    */
-  formalitzar(identificador, nomAssignatura, observacio = '') {
+  formalitzar(identificador, nomAssignatura, observacio = '', opcions = null) {
     const resultat = this.consultar(identificador, nomAssignatura);
     if (!resultat.potMatricular) return resultat;
     const nota = observacio.trim();
+    if (opcions !== null && !isOpcionsMatriculaValides(opcions)) {
+      return { ...resultat, potMatricular: false, tipus: 'error',
+        errors: getErrorsOpcionsMatricula(opcions),
+        missatge: 'Revisa la modalitat, el campus o la franja i accepta les condicions.' };
+    }
     if (nota.length > 500) {
       return { ...resultat, potMatricular: false, tipus: 'error',
         errors: { observacio: "L'observació no pot superar els 500 caràcters." },
@@ -249,7 +267,8 @@ class ServeiAcademic {
     }
     const matricula = {
       referencia: `MAT-${String(this.#seguentNumero()).padStart(6, '0')}`,
-      codiAlumne: resultat.codiAlumne, codiAssignatura: resultat.assignatura.codi, observacio: nota
+      codiAlumne: resultat.codiAlumne, codiAssignatura: resultat.assignatura.codi, observacio: nota,
+      data: new Date().toISOString(), opcions: opcions === null ? null : { ...opcions }
     };
     this.#matricules.set(this.#clauMatricula(matricula.codiAlumne, matricula.codiAssignatura), matricula);
     this.#assignatures.get(resultat.clauAssignatura).places -= 1;
@@ -285,8 +304,12 @@ class ServeiAcademic {
           codisAssignatura.has(matricula.codiAssignatura) &&
           typeof matricula.observacio === 'string' && matricula.observacio.length <= 500) {
         const { referencia, codiAlumne, codiAssignatura, observacio } = matricula;
-        this.#matricules.set(this.#clauMatricula(codiAlumne, codiAssignatura), { referencia, codiAlumne, codiAssignatura, observacio });
+        const data = typeof matricula.data === 'string' && Number.isFinite(Date.parse(matricula.data)) ? matricula.data : null;
+        const opcions = isOpcionsMatriculaValides(matricula.opcions) ? { ...matricula.opcions } : null;
+        this.#matricules.set(this.#clauMatricula(codiAlumne, codiAssignatura),
+          { referencia, codiAlumne, codiAssignatura, observacio, data, opcions });
       }
+
     }
   }
 
@@ -296,4 +319,30 @@ class ServeiAcademic {
       matricules: Array.from(this.#matricules.values())
     });
   }
+}
+
+/**
+ * Valida els controls opcionals de la pràctica de matrícula.
+ * @param {object|null} opcions Modalitat, destinació i acceptació.
+ * @returns {boolean} Si les opcions són vàlides.
+ */
+function isOpcionsMatriculaValides(opcions) {
+  return opcions !== null && opcions !== undefined && Object.keys(getErrorsOpcionsMatricula(opcions)).length === 0;
+}
+
+/**
+ * Identifica els errors dels camps obligatoris de les opcions de matrícula.
+ * @param {object|null} opcions Modalitat, destinació i acceptació introduïdes.
+ * @returns {object} Missatges indexats pel camp invàlid.
+ */
+function getErrorsOpcionsMatricula(opcions) {
+  const errors = {};
+  const destinacions = { presencial: ['Barcelona', 'Girona'], online: ['Matí', 'Tarda'] };
+  const modalitatValida = opcions?.modalitat === 'presencial' || opcions?.modalitat === 'online';
+  if (!modalitatValida) errors.modalitat = 'Selecciona una modalitat.';
+  else if (!destinacions[opcions.modalitat].includes(opcions.destinacio)) {
+    errors.destinacio = opcions.modalitat === 'presencial' ? 'Selecciona un campus.' : 'Selecciona una franja horària.';
+  }
+  if (opcions?.acceptades !== true) errors.acceptades = 'Accepta les condicions fictícies per continuar.';
+  return errors;
 }

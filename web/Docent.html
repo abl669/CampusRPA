@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CampusRPA | Panel docent</title>
+  <link rel="stylesheet" href="css/campusrpa.css">
+  <script defer src="js/model.js"></script><script defer src="js/escenaris.js"></script>
+  <script defer src="js/didactica.js"></script><script defer src="js/pagines.js"></script>
+</head>
+<body data-pagina="docent">
+<a class="salt" href="#contingut">Ves al contingut principal</a>
+<header class="capcalera"><div class="capcalera-interior">
+  <a class="marca" href="Matricula.html">CampusRPA</a>
+  <nav class="navegacio" aria-label="Navegació principal">
+    <a href="Matricula.html">Consulta</a><a href="Historial.html">Historial</a>
+    <a href="Docent.html" aria-current="page">Docent</a>
+      <a href="escenaris.html">Escenaris</a>
+  </nav>
+</div></header>
+<main id="contingut">
+  <h1>Panel docent</h1>
+  <p class="subtitle">Pràctiques opcionals desactivades per defecte. La configuració es comparteix entre les dues versions.
+    És un simulador local, no un panel administratiu protegit.</p>
+  <section class="targeta">
+    <h2>Pràctiques avançades</h2>
+    <form id="teacher-form">
+      <label class="opcio"><input id="teacher-controls" type="checkbox"> Controls de matrícula dependents i acceptació de condicions</label>
+      <label class="opcio"><input id="teacher-avis" type="checkbox"> Avís superposat abans de consultar</label>
+      <label class="opcio"><input id="teacher-sessio" type="checkbox"> Sessió fictícia que caduca, sense credencials</label>
+      <label for="teacher-seconds">Durada de la sessió en segons (5–120)</label>
+      <input id="teacher-seconds" type="number" min="5" max="120" step="1" required>
+      <div class="accions"><button class="boto" type="submit">Desar configuració</button></div>
+    </form>
+  </section>
+  <section class="targeta">
+    <h2>Escenari reproduïble</h2>
+    <label for="teacher-scenario">Propera pàgina de pràctica</label>
+    <select id="teacher-scenario">
+      <option value="Matricula.html">Normal</option><option value="ErrorCarga.html">Càrrega lenta</option>
+      <option value="ErrorConsultaLenta.html">Consulta lenta</option><option value="ErrorSenseResposta.html">Sense resposta</option>
+      <option value="ErrorIntermitent.html">Intermitent</option><option value="ErrorMatricula.html">Error de matrícula</option>
+      <option value="ErrorConfirmacio.html">Confirmació perduda</option><option value="ErrorServei.html">Servei 503</option>
+    </select>
+    <label for="teacher-delay">Retard dels escenaris lents, en segons (1–120)</label>
+    <input id="teacher-delay" type="number" min="1" max="120" value="5" step="1" required>
+    <div class="accions"><button id="teacher-launch" class="boto" type="button">Obrir escenari sense sorteig</button></div>
+  </section>
+  <section class="targeta">
+    <h2>Dades reproduïbles</h2>
+    <p>Preparar el conjunt esborra les matrícules i fallades anteriors i crea 8 matrícules per practicar la paginació.
+      Restablir també desactiva les pràctiques avançades; no canvia el mode aleatori.</p>
+    <div class="accions">
+      <button id="teacher-seed" class="boto secundari" type="button">Reiniciar i preparar 8 matrícules</button>
+      <button id="teacher-reset" class="boto secundari" type="button">Restablir dades i pràctiques</button>
+    </div>
+    <p id="teacher-status" role="status" aria-live="polite"></p>
+  </section>
+  <section class="targeta">
+    <h2>Registre docent</h2>
+    <p class="ajuda">Últims 200 esdeveniments. El robot ha de treballar amb la interfície acadèmica, no amb aquest registre.</p>
+    <button id="teacher-log-refresh" class="boto secundari" type="button">Actualitzar registre</button>
+    <pre id="teacher-log" class="registre"></pre>
+  </section>
+</main>
+<footer>Entorn fictici de formació. No introdueixis credencials ni dades personals reals.</footer>
+</body>
+</html>

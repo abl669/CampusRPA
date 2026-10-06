@@ -13,6 +13,7 @@ async function executarProvesEscenaris() {
   };
   const esperar = retard => new Promise(resoldre => setTimeout(resoldre, retard));
   const camp = id => document.getElementById(id);
+  const esOcult = id => !camp(id) || camp(id).hidden;
   const esperarCondicio = async (condicio, maxim, missatge) => {
     const inici = performance.now();
     while (!condicio()) {
@@ -223,7 +224,7 @@ async function executarProvesEscenaris() {
         await esperarCondicio(() => camp('student-input'), 130000, 'El formulari hauria d\'aparèixer després del retard.');
         comprovar(!camp('loading-indicator'), "Hauria de retirar l'indicador de càrrega.");
         await consultar('ALU011', 'Power Automate');
-        comprovar(!camp('enrollment-section').hidden, 'Després de carregar, hauria de funcionar amb normalitat.');
+        comprovar(!esOcult('enrollment-section'), 'Després de carregar, hauria de funcionar amb normalitat.');
       });
     },
     consultaLenta: () => {
@@ -231,17 +232,17 @@ async function executarProvesEscenaris() {
         const inici = performance.now();
         enviarConsulta('ALU011', 'Power Automate');
         await esperar(900);
-        comprovar(camp('search-button').disabled && camp('result-panel').hidden, 'La consulta hauria de continuar en curs.');
+        comprovar(camp('search-button').disabled && esOcult('result-panel'), 'La consulta hauria de continuar en curs.');
         await esperarOperacio(segonsEscenari * 1000 + 2000);
         comprovar(performance.now() - inici >= segonsEscenari * 1000 - 50, 'Hauria de respectar el retard configurat.');
-        comprovar(!camp('enrollment-section').hidden, 'Hauria d\'acabar mostrant el resultat correcte.');
+        comprovar(!esOcult('enrollment-section'), 'Hauria d\'acabar mostrant el resultat correcte.');
       });
     },
     senseResposta: () => {
       afegirProva('consulta_ambEscenariSenseResposta_noRespon', 'integracio', async () => {
         enviarConsulta('ALU011', 'Power Automate');
         await esperar(1500);
-        comprovar(camp('search-button').disabled && camp('result-panel').hidden, 'La consulta no hauria de respondre.');
+        comprovar(camp('search-button').disabled && esOcult('result-panel'), 'La consulta no hauria de respondre.');
         comprovar(camp('search-status').textContent.includes('Consultant'), "Hauria de mostrar l'estat d'espera.");
       });
       afegirProva('consulta_ambEsperaICanviDeDades_recuperaElsControls', 'integracio', async () => {
@@ -254,7 +255,7 @@ async function executarProvesEscenaris() {
         await consultar('ALU011', 'Power Automate');
         comprovar(esErrorTecnic() && camp('result-seats').textContent === '—', 'El primer intent hauria de ser un error tècnic.');
         await consultar('ALU011', 'Power Automate');
-        comprovar(!esErrorTecnic() && !camp('enrollment-section').hidden, 'El reintent hauria de funcionar.');
+        comprovar(!esErrorTecnic() && !esOcult('enrollment-section'), 'El reintent hauria de funcionar.');
       });
       afegirProva('consulta_ambEscenariIntermitentIAltraCombinacio_tornaAFallar', 'integracio', async () => {
         await consultar('ALU012', 'Power Automate');
@@ -270,10 +271,10 @@ async function executarProvesEscenaris() {
       afegirProva('matricula_ambEscenariErrorMatricula_fallaSenseRegistrarIElReintentFunciona', 'integracio', async () => {
         await consultar('ALU001', 'Automatització RPA');
         await formalitzar();
-        comprovar(esErrorTecnic() && camp('enrollment-section').hidden, 'El primer intent hauria de ser un error tècnic.');
+        comprovar(esErrorTecnic() && esOcult('enrollment-section'), 'El primer intent hauria de ser un error tècnic.');
         comprovar(places(serveiPersistent(), 'RPA001') === 20, 'La matrícula fallida no hauria de consumir places.');
         await consultar('ALU001', 'Automatització RPA');
-        comprovar(!camp('enrollment-section').hidden, 'Hauria de permetre reintentar després de consultar.');
+        comprovar(!esOcult('enrollment-section'), 'Hauria de permetre reintentar després de consultar.');
         await formalitzar();
         comprovar(camp('message').textContent.includes('MAT-000001') && camp('result-seats').textContent === '19',
           'El reintent hauria de registrar una única matrícula.');
@@ -284,7 +285,7 @@ async function executarProvesEscenaris() {
         await consultar('ALU001', 'Automatització RPA');
         camp('enrollment-section').requestSubmit();
         await esperar(1500);
-        comprovar(enCurs && camp('create-enrollment-button').disabled && camp('result-panel').hidden,
+        comprovar(enCurs && !camp('create-enrollment-button') && !camp('result-panel'),
           'La pàgina hauria de quedar esperant la confirmació.');
         comprovar(camp('search-status').textContent.includes('Esperant la confirmació'), "Hauria d'indicar l'espera.");
         const resultat = serveiPersistent().consultar('ALU001', 'Automatització RPA');
@@ -295,7 +296,7 @@ async function executarProvesEscenaris() {
         await consultar('ALU001', 'Automatització RPA');
         comprovar(camp('result-course-status').textContent === 'Matriculada' && camp('message').textContent.includes('MAT-000001'),
           'Hauria de recuperar la referència en tornar a consultar.');
-        comprovar(camp('result-seats').textContent === '19' && camp('enrollment-section').hidden,
+        comprovar(camp('result-seats').textContent === '19' && esOcult('enrollment-section'),
           'No hauria de permetre una matrícula duplicada.');
       });
     }

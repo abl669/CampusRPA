@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CampusRPA | Historial de matrícules</title>
+  <link rel="stylesheet" href="css/campusrpa.css">
+  <script defer src="js/model.js"></script>
+  <script defer src="js/didactica.js"></script>
+  <script defer src="js/pagines.js"></script>
+</head>
+<body data-pagina="historial">
+<a class="salt" href="#contingut">Ves al contingut principal</a>
+<header class="capcalera"><div class="capcalera-interior">
+  <a class="marca" href="Matricula.html">CampusRPA</a>
+  <nav class="navegacio" aria-label="Navegació principal">
+    <a href="Matricula.html">Consulta</a><a href="Historial.html" aria-current="page">Historial</a>
+    <a href="Docent.html">Docent</a>
+      <a href="escenaris.html">Escenaris</a>
+  </nav>
+</div></header>
+<main id="contingut">
+  <h1>Historial de matrícules</h1>
+  <p class="subtitle">Comprova les operacions registrades, extreu la taula i descarrega justificants ficticis.</p>
+  <section class="targeta">
+    <form id="history-form">
+      <label for="history-search">Cerca per alumne, correu, referència o assignatura</label>
+      <input id="history-search" type="search" maxlength="100" placeholder="Ex.: ALU001 o MAT-000001">
+      <div class="grid">
+        <div><label for="history-subject">Assignatura</label><select id="history-subject"><option value="">Totes</option></select></div>
+        <div><label for="history-size">Files per pàgina</label><select id="history-size">
+          <option value="5">5</option><option value="10">10</option><option value="20">20</option>
+        </select></div>
+      </div>
+      <div class="accions"><button class="boto" type="submit">Cercar</button>
+        <button id="history-refresh" class="boto secundari" type="button">Actualitzar historial</button></div>
+    </form>
+    <div class="taula-scroll" tabindex="0" role="region" aria-label="Taula de matrícules">
+      <table id="history-table">
+        <caption>Matrícules registrades al navegador</caption>
+        <thead><tr><th scope="col">Referència</th><th scope="col">Alumne</th><th scope="col">Nom</th>
+          <th scope="col">Correu</th><th scope="col">Assignatura</th><th scope="col">Data</th>
+          <th scope="col">Estat</th><th scope="col">Justificant</th></tr></thead>
+        <tbody id="history-rows"></tbody>
+      </table>
+    </div>
+    <p id="history-empty" hidden>No hi ha matrícules que coincideixin amb la cerca.</p>
+    <div class="accions"><button id="history-previous" class="boto secundari" type="button">Anterior</button>
+      <span id="history-page" role="status"></span>
+      <button id="history-next" class="boto secundari" type="button">Següent</button></div>
+    <p id="history-status" role="status" aria-live="polite"></p>
+  </section>
+</main>
+<footer>Justificants de text ficticis, sense validesa oficial. No es transmeten dades a cap servidor.</footer>
+</body>
+</html>

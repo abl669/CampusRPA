@@ -24,6 +24,74 @@ let operacioActual = 0;
 let enCurs = false;
 
 /**
+ * Elimina el modal i les referències als seus camps, sense alterar l'operació pendent.
+ * @returns {void}
+ */
+function eliminarModalResultat() {
+  const modal = elements['result-panel'];
+  if (!modal) return;
+  const ids = Array.from(modal.querySelectorAll('[id]'), element => element.id);
+  if (modal instanceof HTMLDialogElement && modal.open) modal.close();
+  modal.remove();
+  for (const id of ['result-panel', ...ids]) delete elements[id];
+}
+
+/**
+ * Prepara el modal i connecta els controls quan arriba la primera resposta.
+ * @returns {void}
+ */
+function prepararModalResultat() {
+  if (elements['result-panel']) return;
+  const modal = crearModalResultat(document.getElementById('aplicacio'));
+  elements['result-panel'] = modal;
+  for (const element of modal.querySelectorAll('[id]')) elements[element.id] = element;
+  elements['close-result-button'].addEventListener('click', tancarModalResultat);
+  modal.addEventListener('keydown', esdeveniment => {
+    if (esdeveniment.key !== 'Escape') return;
+    esdeveniment.preventDefault();
+    tancarModalResultat();
+  });
+  modal.addEventListener('cancel', esdeveniment => {
+    esdeveniment.preventDefault();
+    tancarModalResultat();
+  });
+  modal.addEventListener('close', () => {
+    if (elements['result-panel'] === modal) tancarModalResultat();
+  });
+  elements['enrollment-section'].addEventListener('submit', esdeveniment => {
+    esdeveniment.preventDefault();
+    formalitzarMatricula();
+  });
+  elements['enrollment-note'].addEventListener('input', () => mostrarErrorCamp('enrollment-note', 'note-error'));
+  prepararControlsDidactics();
+}
+
+/**
+ * Tanca el resultat, cancel·la qualsevol confirmació pendent i retorna el focus al formulari.
+ * @returns {void}
+ */
+function tancarModalResultat() {
+  invalidarConsulta();
+  elements['student-input'].focus();
+  elements['search-status'].textContent = 'Resultat tancat. Pots consultar una altra sol·licitud.';
+}
+
+/**
+ * Obre el resultat com a modal accessible i situa el focus al seu títol.
+ * @returns {void}
+ */
+function obrirModalResultat() {
+  const resultat = elements['result-panel'];
+  if (resultat instanceof HTMLDialogElement) {
+    if (!resultat.open) resultat.showModal();
+  } else {
+    resultat.setAttribute('open', '');
+    resultat.scrollIntoView({ block: 'start', behavior: 'auto' });
+  }
+  elements['result-title'].focus();
+}
+
+/**
  * Mostra o elimina un error accessible associat a un camp.
  * @param {string} idCamp Identificador del camp.
  * @param {string} idError Identificador del missatge d'error.
@@ -82,12 +150,15 @@ function mostrarCataleg() {
 function indicarOperacio(operacio) {
   enCurs = operacio !== null;
   elements['search-button'].disabled = enCurs;
-  elements['create-enrollment-button'].disabled = enCurs;
-  elements['enrollment-note'].disabled = operacio === 'matricula';
+  if (elements['create-enrollment-button']) {
+    elements['create-enrollment-button'].disabled = enCurs;
+    elements['enrollment-note'].disabled = operacio === 'matricula';
+    elements['enrollment-section'].setAttribute('aria-busy', String(operacio === 'matricula'));
+    elements['create-enrollment-button'].textContent = operacio === 'matricula' ? 'Formalitzant...' : 'Formalitzar matrícula';
+    elements['enrollment-status'].textContent = operacio === 'matricula' ? 'Formalitzant la matrícula…' : '';
+  }
   elements['academic-form'].setAttribute('aria-busy', String(operacio === 'consulta'));
-  elements['enrollment-section'].setAttribute('aria-busy', String(operacio === 'matricula'));
   elements['search-button'].textContent = operacio === 'consulta' ? 'Consultant...' : 'Consultar sol·licitud';
-  elements['create-enrollment-button'].textContent = operacio === 'matricula' ? 'Formalitzant...' : 'Formalitzar matrícula';
   elements['search-status'].textContent = operacio === 'consulta' ? 'Consultant la sol·licitud…' : '';
 }
 
@@ -102,14 +173,9 @@ function invalidarConsulta() {
   consultaActual = null;
   dadesConsultades = null;
   indicarOperacio(null);
-  elements['result-panel'].hidden = true;
-  elements['enrollment-section'].hidden = true;
-  elements['message'].textContent = '';
-  delete elements['message'].dataset.tipusError;
-  elements['enrollment-note'].value = '';
+  eliminarModalResultat();
   mostrarErrorCamp('student-input', 'student-error');
   mostrarErrorCamp('subject-input', 'subject-error');
-  mostrarErrorCamp('enrollment-note', 'note-error');
 }
 
 /**
@@ -130,6 +196,9 @@ function invalidarSiCanvienDades() {
  * @returns {void}
  */
 function mostrarResultat(resultat) {
+  registrarOperacioDidactica('resultat', `${resultat.codiAlumne}:${resultat.assignatura?.codi || ''}`, resultat.tipus);
+  prepararModalResultat();
+  elements['result-panel'].dataset.estat = 'resposta';
   delete elements['message'].dataset.tipusError;
   elements['result-panel'].hidden = false;
   elements['result-student'].textContent = resultat.codiAlumne || '—';
@@ -152,6 +221,8 @@ function mostrarResultat(resultat) {
   mostrarErrorCamp('student-input', 'student-error', resultat.errors.alumne);
   mostrarErrorCamp('subject-input', 'subject-error', resultat.errors.assignatura);
   mostrarErrorCamp('enrollment-note', 'note-error', resultat.errors.observacio);
+  mostrarErrorsControlsDidactics(resultat.errors);
+  obrirModalResultat();
 }
 
 /**
@@ -162,7 +233,10 @@ function mostrarResultat(resultat) {
  */
 function mostrarErrorOperacio(error, missatge = "No s'ha pogut completar l'operació. Torna a consultar la sol·licitud.") {
   console.error("No s'ha pogut completar l'operació acadèmica.", error);
+  registrarOperacioDidactica('error tècnic', dadesConsultades?.identificador || '', missatge);
   consultaActual = null;
+  prepararModalResultat();
+  elements['result-panel'].dataset.estat = 'resposta';
   elements['result-panel'].hidden = false;
   elements['enrollment-section'].hidden = true;
   for (const dada of elements['result-panel'].querySelectorAll('dd')) {
@@ -172,7 +246,7 @@ function mostrarErrorOperacio(error, missatge = "No s'ha pogut completar l'opera
   elements['message'].textContent = missatge;
   elements['message'].className = 'message error';
   elements['message'].dataset.tipusError = 'tecnic';
-  elements['result-title'].focus();
+  obrirModalResultat();
 }
 
 /**
@@ -197,15 +271,22 @@ function determinarIncidencia(tipus, clau) {
  * @returns {void}
  */
 function executarOperacio(tipus, clau, accio) {
+  if (!comprovarSessioDidactica()) return;
+  registrarOperacioDidactica(tipus, clau, 'inici');
   const incidencia = determinarIncidencia(tipus, clau);
   const versio = ++operacioActual;
-  delete elements['message'].dataset.tipusError;
+  if (elements['message']) delete elements['message'].dataset.tipusError;
+  if (elements['result-panel']) {
+    elements['result-panel'].dataset.estat = 'pendent';
+    elements['message'].textContent = '';
+  }
   indicarOperacio(tipus);
   if (incidencia === 'senseResposta') return;
   const retardBase = tipus === 'consulta' ? RETARD_CONSULTA : RETARD_MATRICULA;
   temporitzador = setTimeout(() => {
     if (versio !== operacioActual) return;
     temporitzador = null;
+    if (!comprovarSessioDidactica()) return;
     let completada = true;
     try {
       if (incidencia === 'intermitent') {
@@ -222,6 +303,7 @@ function executarOperacio(tipus, clau, accio) {
     } catch (error) {
       mostrarErrorOperacio(error);
     } finally {
+      registrarOperacioDidactica(tipus, clau, completada ? 'resposta' : 'sense confirmació');
       if (completada) indicarOperacio(null);
     }
   }, incidencia === 'lenta' ? segonsEscenari * 1000 : retardBase);
@@ -240,7 +322,6 @@ function consultarSollicitud() {
   const resultat = serveiAcademic.consultar(identificador, nomAssignatura);
   if (Object.keys(resultat.errors).length) {
     mostrarResultat(resultat);
-    elements[resultat.errors.alumne ? 'student-input' : 'subject-input'].focus();
     return;
   }
   executarOperacio('consulta', `${resultat.codiAlumne}:${resultat.assignatura.codi}`, () => {
@@ -271,18 +352,22 @@ function formalitzarMatricula() {
     return;
   }
   const observacio = elements['enrollment-note'].value;
+  const opcions = llegirControlsDidactics();
+  const errorsOpcions = opcions === null ? {} : getErrorsOpcionsMatricula(opcions);
+  mostrarErrorsControlsDidactics(errorsOpcions, true);
+  mostrarErrorCamp('enrollment-note', 'note-error');
   if (observacio.trim().length > 500) {
     mostrarErrorCamp('enrollment-note', 'note-error', "L'observació no pot superar els 500 caràcters.");
     elements['enrollment-note'].focus();
     return;
   }
+  if (Object.keys(errorsOpcions).length > 0) return;
   const consulta = { ...consultaActual };
   executarOperacio('matricula', `${consulta.identificador}:${consulta.codiAssignatura}`, incidencia => {
-    const resultat = serveiAcademic.formalitzar(consulta.identificador, consulta.nomAssignatura, observacio);
+    const resultat = serveiAcademic.formalitzar(consulta.identificador, consulta.nomAssignatura, observacio, opcions);
     consultaActual = null;
     if (incidencia === 'confirmacioPerduda' && resultat.tipus === 'success') {
-      elements['result-panel'].hidden = true;
-      elements['enrollment-section'].hidden = true;
+      eliminarModalResultat();
       elements['search-status'].textContent = 'Esperant la confirmació de matrícula…';
       return false;
     }
@@ -301,15 +386,10 @@ function connectarEsdeveniments() {
     esdeveniment.preventDefault();
     consultarSollicitud();
   });
-  elements['enrollment-section'].addEventListener('submit', esdeveniment => {
-    esdeveniment.preventDefault();
-    formalitzarMatricula();
-  });
   for (const id of ['student-input', 'subject-input']) {
     elements[id].addEventListener('input', invalidarConsulta);
     elements[id].addEventListener('change', invalidarSiCanvienDades);
   }
-  elements['enrollment-note'].addEventListener('input', () => mostrarErrorCamp('enrollment-note', 'note-error'));
   for (const boto of document.querySelectorAll('.cas')) {
     boto.addEventListener('click', () => {
       invalidarConsulta();
@@ -335,6 +415,7 @@ function muntarAplicacio(contenidor) {
   connectarEsdeveniments();
   connectarBotoModeAleatori(document.getElementById('random-mode-button'), document.getElementById('random-mode-status'));
   mostrarCataleg();
+  iniciarPractiquesDidactiques();
 }
 
 /**
