@@ -46,7 +46,11 @@ input[aria-invalid="true"], select[aria-invalid="true"] { border: 2px solid var(
 .boto.secundari { background: white; color: var(--primari); border: 1px solid var(--primari); }
 .accions { display: flex; flex-wrap: wrap; gap: .8rem; align-items: center; margin-top: 1.2rem; }
 .estat-consulta { font-size: .875rem; color: var(--secundari); }
-.result { margin-top: 1.5rem; }
+.modal-resultat { width: min(720px, calc(100% - 2rem)); max-height: calc(100dvh - 2rem);
+  margin: auto; overflow-y: auto; color: var(--text); box-shadow: 0 20px 70px #172b3a40; }
+.modal-resultat::backdrop { background: #102b3acc; }
+.capcalera-modal { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+body:has(dialog[open]) { overflow: hidden; }
 .dades { margin: 1rem 0; }
 .row { display: grid; grid-template-columns: 1fr 1.3fr; gap: 1rem; padding: .65rem 0; border-bottom: 1px solid #e6edf2; }
 .row dt { color: var(--secundari); }
@@ -80,6 +84,30 @@ input[aria-invalid="true"], select[aria-invalid="true"] { border: 2px solid var(
 .codi-error { font-size: clamp(3rem, 10vw, 5rem); font-weight: 800; color: var(--error); line-height: 1; margin-bottom: .5rem; }
 code { overflow-wrap: anywhere; }
 footer { color: var(--secundari); font-size: .8rem; padding-top: .5rem; }
+.result { margin-top: 1.5rem; }
+.opcio { display: flex; align-items: center; gap: .6rem; margin: 1rem 0; }
+.opcio input { width: auto; }
+.opcio:has(input[aria-invalid="true"]) { color: var(--error); }
+.opcio input[aria-invalid="true"] { outline: 2px solid var(--error); outline-offset: 2px; }
+fieldset { border: 1px solid var(--vora); border-radius: .5rem; margin-bottom: 1rem; }
+.taula-scroll { overflow-x: auto; margin-top: 1.5rem; }
+table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+caption { text-align: left; font-weight: 700; padding: .8rem 0; }
+th, td { text-align: left; padding: .7rem; border-bottom: 1px solid var(--vora); overflow-wrap: anywhere; }
+th { background: var(--fons); }
+body[data-pagina="historial"] main { max-width: 1400px; }
+#history-table { min-width: 1120px; }
+#history-table th { white-space: nowrap; overflow-wrap: normal; }
+#history-table td { vertical-align: top; overflow-wrap: normal; }
+#history-table td:nth-child(3), #history-table td:nth-child(5) { min-width: 140px; }
+#history-table td:nth-child(4) { min-width: 180px; overflow-wrap: anywhere; }
+#history-table td:last-child { min-width: 145px; white-space: nowrap; }
+.accio-justificant { padding: .2rem .5rem; margin-top: .3rem; min-height: 32px;
+  border: 1px solid var(--vora); border-radius: .35rem; background: transparent;
+  color: var(--primari); font-size: .8rem; font-weight: 500; }
+.accio-justificant:hover { background: var(--fons); border-color: var(--primari); }
+.registre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 350px; overflow-y: auto; font-size: .8rem; }
+.practica { display: grid; gap: 1rem; margin-top: 1.5rem; }
 @media (max-width: 780px) { .distribucio { grid-template-columns: 1fr; } }
 @media (max-width: 480px) {
   .grid, .row { grid-template-columns: 1fr; gap: .3rem; }

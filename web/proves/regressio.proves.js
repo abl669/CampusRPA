@@ -15,6 +15,8 @@ async function executarProvesAcademiques() {
   };
   const esperar = retard => new Promise(resoldre => setTimeout(resoldre, retard));
   const camp = id => document.getElementById(id);
+  const resultatObert = () => camp('result-panel')?.hasAttribute('open') === true;
+  const esOcult = id => !camp(id) || camp(id).hidden;
   const introduir = (id, valor) => {
     camp(id).value = valor;
     camp(id).dispatchEvent(new Event('input', { bubbles: true }));
@@ -172,8 +174,9 @@ async function executarProvesAcademiques() {
     comprovar(camp('student-input').getAttribute('aria-invalid') === 'true', "Hauria de marcar l'alumne invàlid.");
     comprovar(camp('subject-input').getAttribute('aria-invalid') === 'true', "Hauria de marcar l'assignatura invàlida.");
     comprovar(!camp('student-error').hidden && !camp('subject-error').hidden, 'Hauria de mostrar els errors dels dos camps.');
-    comprovar(document.activeElement === camp('student-input'), 'Hauria de dirigir el focus al primer error.');
-    comprovar(camp('enrollment-section').hidden, 'Hauria de mantenir la matrícula oculta.');
+    comprovar(document.activeElement === camp('result-title') && resultatObert(),
+      'Hauria de dirigir el focus al resultat dins del modal.');
+    comprovar(esOcult('enrollment-section'), 'Hauria de mantenir la matrícula oculta.');
     comprovar(camp('result-subject-details').textContent === '—' && camp('result-subject-credits').textContent === '—',
       'Hauria de mostrar el codi i els crèdits absents sense dades anteriors.');
   });
@@ -202,19 +205,19 @@ async function executarProvesAcademiques() {
     comprovar(camp('result-subject-details').closest('.row') !== camp('result-subject-credits').closest('.row'),
       'Hauria de mostrar el codi i els crèdits en files diferents.');
     comprovar(camp('result-seats').textContent === '20', 'Hauria de mostrar les places inicials.');
-    comprovar(!camp('enrollment-section').hidden, 'Hauria de permetre formalitzar la matrícula.');
+    comprovar(!esOcult('enrollment-section'), 'Hauria de permetre formalitzar la matrícula.');
     comprovar(camp('search-button').textContent === 'Consultar sol·licitud', 'Hauria de restaurar el botó de consulta.');
   });
   afegirProva('consulta_ambCanviDeFocusSenseCanviDeDades_conservaResultat', 'integracio', async () => {
     camp('subject-input').dispatchEvent(new Event('change', { bubbles: true }));
-    comprovar(!camp('result-panel').hidden && !camp('enrollment-section').hidden,
+    comprovar(!esOcult('result-panel') && !esOcult('enrollment-section'),
       'Un canvi de focus sense modificar dades no hauria de cancel·lar la consulta.');
   });
   afegirProva('consulta_ambEntradaModificada_invalidaResultatINetejaObservacio', 'integracio', async () => {
     introduir('enrollment-note', 'Observació anterior');
     introduir('student-input', 'ALU012');
-    comprovar(camp('result-panel').hidden && camp('enrollment-section').hidden, "Hauria d'ocultar la consulta anterior.");
-    comprovar(camp('enrollment-note').value === '', "Hauria de netejar l'observació anterior.");
+    comprovar(esOcult('result-panel') && esOcult('enrollment-section'), "Hauria d'ocultar la consulta anterior.");
+    comprovar(!camp('enrollment-note'), "Hauria d'eliminar l'observació anterior juntament amb el modal.");
   });
   afegirProva('consulta_ambCanviDurantEspera_noPublicaResultatObsolet', 'integracio', async () => {
     omplir('ALU011', 'Power Automate');
@@ -222,7 +225,7 @@ async function executarProvesAcademiques() {
     comprovar(camp('search-button').disabled, "Hauria de desactivar consultes repetides durant l'espera.");
     introduir('student-input', 'ALU012');
     await esperar(750);
-    comprovar(camp('result-panel').hidden, 'No hauria de publicar la consulta cancel·lada.');
+    comprovar(esOcult('result-panel'), 'No hauria de publicar la consulta cancel·lada.');
     comprovar(!camp('search-button').disabled, 'Hauria de recuperar el botó de consulta.');
   });
   afegirProva('consulta_ambCanviProgramaticINomesChange_invalidaLaPeticioPendent', 'integracio', async () => {
@@ -231,17 +234,17 @@ async function executarProvesAcademiques() {
     camp('student-input').value = 'ALU013';
     camp('student-input').dispatchEvent(new Event('change', { bubbles: true }));
     await esperar(750);
-    comprovar(camp('result-panel').hidden && !camp('search-button').disabled, 'Hauria de cancel·lar també els canvis de tipus change.');
+    comprovar(esOcult('result-panel') && !camp('search-button').disabled, 'Hauria de cancel·lar també els canvis de tipus change.');
   });
   afegirProva('consulta_ambExpedientBloquejat_impedeixMatriculaIMostraMotiu', 'integracio', async () => {
     await consultar('ALU020', 'Power Automate');
     comprovar(camp('result-student-status').textContent === 'Bloquejat', "Hauria de mostrar l'expedient bloquejat.");
-    comprovar(camp('enrollment-section').hidden && camp('message').classList.contains('error'), "Hauria de bloquejar la matrícula amb un missatge d'error.");
+    comprovar(esOcult('enrollment-section') && camp('message').classList.contains('error'), "Hauria de bloquejar la matrícula amb un missatge d'error.");
   });
   afegirProva('consulta_ambZeroPlaces_mostraAvisIMatriculaOculta', 'integracio', async () => {
     await consultar('ALU018', 'Bases de dades');
     comprovar(camp('result-seats').textContent === '0', 'Hauria de representar zero places, no un valor absent.');
-    comprovar(camp('enrollment-section').hidden && camp('message').classList.contains('warning'), 'Hauria de mostrar un avís sense permetre matrícula.');
+    comprovar(esOcult('enrollment-section') && camp('message').classList.contains('warning'), 'Hauria de mostrar un avís sense permetre matrícula.');
   });
   afegirProva('consulta_ambTextHTMLAlIdentificador_mostraTextSenseExecutarMarcatge', 'integracio', async () => {
     await consultar('<img src=x onerror="throw new Error()">', 'Power Automate');
@@ -257,7 +260,7 @@ async function executarProvesAcademiques() {
     await consultar('ALU011', 'Automatització RPA');
     camp('student-input').value = 'ALU012';
     formalitzarMatricula();
-    comprovar(camp('result-panel').hidden && camp('search-status').textContent.includes('Les dades han canviat'),
+    comprovar(esOcult('result-panel') && camp('search-status').textContent.includes('Les dades han canviat'),
       'Hauria de rebutjar dades diferents de la consulta vigent.');
     comprovar(placesCataleg(serveiAcademic, 'RPA001') === 20, 'No hauria de consumir places amb dades modificades.');
   });
@@ -276,7 +279,7 @@ async function executarProvesAcademiques() {
     introduir('subject-input', 'Power Automate');
     await esperar(850);
     comprovar(placesCataleg(serveiAcademic, 'RPA001') === 20, 'Una matrícula cancel·lada no hauria de consumir places.');
-    comprovar(camp('result-panel').hidden, 'No hauria de mostrar una confirmació cancel·lada.');
+    comprovar(esOcult('result-panel'), 'No hauria de mostrar una confirmació cancel·lada.');
   });
   afegirProva('matricula_ambDobleEnviament_registraUnaSolaMatriculaIActualitzaCataleg', 'integracio', async () => {
     await consultar('ALU011', 'Automatització RPA');
@@ -289,7 +292,7 @@ async function executarProvesAcademiques() {
     comprovar(camp('message').textContent.includes('MAT-000001'), 'Hauria de mostrar la referència de confirmació.');
     comprovar(camp('message').textContent.includes('<b>Observació de prova</b>') && !camp('message').querySelector('b'),
       "Hauria de mostrar l'observació com a text, sense interpretar HTML.");
-    comprovar(camp('enrollment-section').hidden, 'Hauria de retirar el formulari després de confirmar.');
+    comprovar(esOcult('enrollment-section'), 'Hauria de retirar el formulari després de confirmar.');
     comprovar(Array.from(camp('subject-catalog').children).some(fila =>
       fila.textContent.includes('RPA001') && fila.textContent.includes('19 places')),
       'Hauria de sincronitzar el catàleg amb les places.');
@@ -297,7 +300,7 @@ async function executarProvesAcademiques() {
   afegirProva('consulta_ambMatriculaJaConfirmada_mostraReferenciaIImpedeixDuplicat', 'integracio', async () => {
     await consultar('ALU011', 'Automatització RPA');
     comprovar(camp('result-course-status').textContent === 'Matriculada', 'Hauria de detectar una matrícula existent.');
-    comprovar(camp('message').textContent.includes('MAT-000001') && camp('enrollment-section').hidden,
+    comprovar(camp('message').textContent.includes('MAT-000001') && esOcult('enrollment-section'),
       'Hauria de mostrar la referència anterior i impedir duplicats.');
     comprovar(camp('result-seats').textContent === '19', 'No hauria de descomptar places en consultar una matrícula.');
   });
@@ -305,7 +308,7 @@ async function executarProvesAcademiques() {
     document.querySelector('.cas[data-alumne="ALU020"]').click();
     comprovar(camp('student-input').value === 'ALU020' && camp('subject-input').value === 'Power Automate',
       'Hauria de carregar les dades del cas seleccionat.');
-    comprovar(camp('result-panel').hidden, 'Hauria de retirar el resultat anterior.');
+    comprovar(esOcult('result-panel'), 'Hauria de retirar el resultat anterior.');
   });
   afegirProva('matricula_ambPlacesEsgotadesDespresDeConsulta_mostraRebuigActualitzat', 'integracio', async () => {
     await consultar('ALU016', 'Automatització Web');
@@ -314,7 +317,7 @@ async function executarProvesAcademiques() {
     await esperarOperacio();
     comprovar(camp('result-seats').textContent === '0' && camp('result-course-status').textContent === 'Sense places',
       'Hauria de revalidar les places abans de confirmar.');
-    comprovar(camp('enrollment-section').hidden && camp('message').classList.contains('warning'),
+    comprovar(esOcult('enrollment-section') && camp('message').classList.contains('warning'),
       'No hauria de mostrar una confirmació de matrícula sense places.');
   });
   afegirProva('matricula_ambErrorInesperat_mostraErrorIRestitueixControls', 'integracio', async () => {
@@ -325,7 +328,7 @@ async function executarProvesAcademiques() {
       await formalitzar();
       comprovar(camp('message').classList.contains('error') && camp('message').textContent.includes("No s'ha pogut completar"),
         "Hauria de comunicar l'error de l'operació.");
-      comprovar(!camp('search-button').disabled && camp('enrollment-section').hidden,
+      comprovar(!camp('search-button').disabled && esOcult('enrollment-section'),
         "Hauria de restituir els controls després d'un error.");
       comprovar(camp('result-seats').textContent === '—', 'No hauria de presentar dades anteriors com si fossin actuals.');
       comprovar(placesCataleg(serveiAcademic, 'PA001') === 15, 'No hauria de consumir places si no es registra la matrícula.');
@@ -333,7 +336,7 @@ async function executarProvesAcademiques() {
       serveiAcademic.formalitzar = metodeOriginal;
     }
     await consultar('ALU014', 'Power Automate');
-    comprovar(!camp('enrollment-section').hidden, "Hauria de permetre tornar a consultar després de l'error.");
+    comprovar(!esOcult('enrollment-section'), "Hauria de permetre tornar a consultar després de l'error.");
   });
 
   const filesExcel = [
@@ -411,14 +414,14 @@ async function executarProvesAcademiques() {
       comprovar(camp('result-student-name').textContent === nom && camp('result-student-email').textContent === email,
         `Hauria de mostrar el nom i el correu de ${identificador}.`);
       if (codi === 'ALU007') {
-        comprovar(camp('subject-error').textContent === 'Assignatura no trobada.' && camp('enrollment-section').hidden,
+        comprovar(camp('subject-error').textContent === 'Assignatura no trobada.' && esOcult('enrollment-section'),
           "Hauria de poder seleccionar el cas inexistent però impedir-ne la matrícula.");
         mostrarCataleg();
         comprovar(camp('subject-input').value === 'Assignatura Inexistent',
           "Hauria de conservar la selecció del cas negatiu en actualitzar el catàleg.");
       }
       if (codi === 'ALU009') {
-        comprovar(camp('result-course-status').textContent === 'Inactiva' && camp('enrollment-section').hidden,
+        comprovar(camp('result-course-status').textContent === 'Inactiva' && esOcult('enrollment-section'),
           'Hauria de mostrar la inactivitat i impedir la matrícula.');
       }
     }
@@ -486,7 +489,7 @@ async function executarProvesAcademiques() {
         camp('subject-error').textContent === (errorAssignatura || '') &&
         camp('result-course-status').textContent === estat,
         `Hauria de mostrar el resultat esperat per al cas ${posicio + 1}.`);
-      comprovar(camp('enrollment-section').hidden === (posicio !== 0),
+      comprovar(esOcult('enrollment-section') === (posicio !== 0),
         'Només el cas vàlid hauria de permetre matricular.');
       if (codi === 'ALU011') comprovar(camp('result-student-email').textContent === 'ana.garcia@campusrpa.test',
         "Hauria de mostrar el correu afegit a l'alumne anterior.");
@@ -497,8 +500,61 @@ async function executarProvesAcademiques() {
     await formalitzar();
     comprovar(camp('result-subject-details').textContent === 'PY001' && camp('result-seats').textContent === '24',
       'Hauria de mostrar el codi real i les places restants.');
-    comprovar(camp('message').textContent.includes('Matrícula formalitzada correctament') && camp('enrollment-section').hidden,
+    comprovar(camp('message').textContent.includes('Matrícula formalitzada correctament') && esOcult('enrollment-section'),
       'Hauria de confirmar la matrícula i impedir duplicats.');
+  });
+
+  afegirProva('modal_abansIDurantConsulta_noExisteixFinsQueArribaResposta', 'integracio', async () => {
+    invalidarConsulta();
+    comprovar(!camp('result-panel') && !camp('message') && !camp('enrollment-section'),
+      'El resultat no hauria de formar part del DOM abans de consultar.');
+    omplir('ALU014', 'Arquitectura de sistemes');
+    camp('academic-form').requestSubmit();
+    comprovar(!camp('result-panel') && !camp('message'),
+      'El resultat no hauria de formar part del DOM durant la consulta.');
+    await esperarOperacio();
+    comprovar(camp('result-panel').tagName === (document.body.dataset.presentacio === 'pagina' ? 'SECTION' : 'DIALOG') && resultatObert() &&
+      camp('result-panel').dataset.estat === 'resposta' && document.activeElement === camp('result-title'),
+      'La resposta hauria de crear i obrir un modal amb el focus al títol.');
+  });
+  afegirProva('modal_ambBotoTancar_eliminaHtmlIRetornaFocusSenseMatricular', 'integracio', async () => {
+    const placesAbans = placesCataleg(serveiAcademic, 'SYS001');
+    camp('close-result-button').click();
+    comprovar(!camp('result-panel') && !camp('message') && !camp('enrollment-note'),
+      'Tancar hauria de retirar tota la informació del resultat del DOM.');
+    comprovar(document.activeElement === camp('student-input') && !consultaActual && !enCurs,
+      'Tancar hauria de retornar el focus i invalidar la consulta anterior.');
+    comprovar(placesCataleg(serveiAcademic, 'SYS001') === placesAbans,
+      'Tancar sense confirmar no hauria de consumir places.');
+    await consultar('ALU014', 'Arquitectura de sistemes');
+    comprovar(document.querySelectorAll('#result-panel').length === 1 && resultatObert(),
+      'Una nova consulta hauria de crear exactament un modal.');
+  });
+  afegirProva('modal_ambEscape_cancelLaConsultaIEliminaResultat', 'integracio', () => {
+    const cancelacio = new Event('cancel', { cancelable: true });
+    camp('result-panel').dispatchEvent(cancelacio);
+    comprovar(cancelacio.defaultPrevented && !camp('result-panel') && document.activeElement === camp('student-input'),
+      'La cancel·lació amb Escape hauria de retirar el modal i retornar el focus.');
+  });
+  afegirProva('modal_ambTeclaEscape_eliminaResultatIRetornaFocus', 'integracio', async () => {
+    await consultar('ALU014', 'Arquitectura de sistemes');
+    camp('result-title').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+    comprovar(!camp('result-panel') && document.activeElement === camp('student-input'),
+      'La tecla Escape hauria de tancar el resultat des de qualsevol element del modal.');
+  });
+  afegirProva('modal_ambMatriculaPendentITancament_cancellaSenseConsumirPlaces', 'integracio', async () => {
+    await consultar('ALU014', 'Arquitectura de sistemes');
+    const placesAbans = placesCataleg(serveiAcademic, 'SYS001');
+    camp('enrollment-section').requestSubmit();
+    comprovar(camp('result-panel').dataset.estat === 'pendent' && !camp('message').textContent &&
+      camp('enrollment-status').textContent.includes('Formalitzant'),
+      'Durant la matrícula no hauria de presentar la resposta anterior com una confirmació nova.');
+    camp('close-result-button').click();
+    await esperar(850);
+    comprovar(!camp('result-panel') && !enCurs && !camp('search-button').disabled,
+      'Tancar hauria de cancel·lar la confirmació pendent sense reobrir el modal.');
+    comprovar(placesCataleg(serveiAcademic, 'SYS001') === placesAbans,
+      'La matrícula cancel·lada no hauria de consumir places.');
   });
 
   for (const prova of proves) {

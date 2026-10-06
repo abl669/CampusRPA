@@ -36,34 +36,6 @@ const MARCATGE_APLICACIO = `
           </div>
         </form>
       </section>
-      <section id="result-panel" class="targeta result" aria-labelledby="result-title" hidden>
-        <p class="pas">Pas 2 · Resultat</p>
-        <h2 id="result-title" tabindex="-1">Resultat de la consulta</h2>
-        <dl class="dades">
-          <div class="row"><dt>Alumne</dt><dd id="result-student">—</dd></div>
-          <div class="row"><dt>Nom i cognoms</dt><dd id="result-student-name">—</dd></div>
-          <div class="row"><dt>Correu electrònic</dt><dd id="result-student-email">—</dd></div>
-          <div class="row"><dt>Titulació</dt><dd id="result-degree">—</dd></div>
-          <div class="row"><dt>Estat de l'expedient</dt><dd id="result-student-status">—</dd></div>
-          <div class="row"><dt>Assignatura</dt><dd id="result-subject">—</dd></div>
-          <div class="row"><dt>Codi</dt><dd id="result-subject-details">—</dd></div>
-          <div class="row"><dt>Crèdits</dt><dd id="result-subject-credits">—</dd></div>
-          <div class="row"><dt>Places disponibles</dt><dd id="result-seats">—</dd></div>
-          <div class="row"><dt>Estat de l'assignatura</dt><dd id="result-course-status">—</dd></div>
-        </dl>
-        <div id="message" class="message" role="status" aria-live="polite" aria-atomic="true"></div>
-        <form id="enrollment-section" class="seccio-matricula" novalidate hidden>
-          <h3>Formalitza la matrícula</h3>
-          <label for="enrollment-note">Observació de matrícula <span class="ajuda">(opcional)</span></label>
-          <input id="enrollment-note" name="note" type="text" placeholder="Ex.: Sol·licitud automàtica"
-            maxlength="500" aria-describedby="note-help note-error">
-          <span id="note-help" class="camp-ajuda">Màxim 500 caràcters. No introdueixis dades personals reals.</span>
-          <span id="note-error" class="camp-error" hidden></span>
-          <div class="accions">
-            <button id="create-enrollment-button" class="boto" data-testid="create-enrollment" type="submit">Formalitzar matrícula</button>
-          </div>
-        </form>
-      </section>
     </div>
     <aside aria-label="Ajuda i dades de prova">
       <section class="targeta" aria-labelledby="random-title">
@@ -107,6 +79,63 @@ const MARCATGE_APLICACIO = `
       </section>
     </aside>
   </div>`;
+
+/** Marcatge del modal, inserit només quan hi ha una resposta. */
+const MARCATGE_RESULTAT = `
+      <dialog id="result-panel" class="targeta modal-resultat" aria-labelledby="result-title" aria-describedby="message">
+        <div class="capcalera-modal">
+          <span class="ajuda">Resultat acadèmic</span>
+          <button id="close-result-button" class="boto secundari" type="button">Tancar resultat</button>
+        </div>
+        <p class="pas">Pas 2 · Resultat</p>
+        <h2 id="result-title" tabindex="-1">Resultat de la consulta</h2>
+        <dl class="dades">
+          <div class="row"><dt>Alumne</dt><dd id="result-student">—</dd></div>
+          <div class="row"><dt>Nom i cognoms</dt><dd id="result-student-name">—</dd></div>
+          <div class="row"><dt>Correu electrònic</dt><dd id="result-student-email">—</dd></div>
+          <div class="row"><dt>Titulació</dt><dd id="result-degree">—</dd></div>
+          <div class="row"><dt>Estat de l'expedient</dt><dd id="result-student-status">—</dd></div>
+          <div class="row"><dt>Assignatura</dt><dd id="result-subject">—</dd></div>
+          <div class="row"><dt>Codi</dt><dd id="result-subject-details">—</dd></div>
+          <div class="row"><dt>Crèdits</dt><dd id="result-subject-credits">—</dd></div>
+          <div class="row"><dt>Places disponibles</dt><dd id="result-seats">—</dd></div>
+          <div class="row"><dt>Estat de l'assignatura</dt><dd id="result-course-status">—</dd></div>
+        </dl>
+        <div id="message" class="message" role="status" aria-live="polite" aria-atomic="true"></div>
+        <form id="enrollment-section" class="seccio-matricula" novalidate hidden>
+          <h3>Formalitza la matrícula</h3>
+          <label for="enrollment-note">Observació de matrícula <span class="ajuda">(opcional)</span></label>
+          <input id="enrollment-note" name="note" type="text" placeholder="Ex.: Sol·licitud automàtica"
+            maxlength="500" aria-describedby="note-help note-error">
+          <span id="note-help" class="camp-ajuda">Màxim 500 caràcters. No introdueixis dades personals reals.</span>
+          <span id="note-error" class="camp-error" hidden></span>
+          <div class="accions">
+            <button id="create-enrollment-button" class="boto" data-testid="create-enrollment" type="submit">Formalitzar matrícula</button>
+            <span id="enrollment-status" role="status" aria-live="polite"></span>
+          </div>
+        </form>
+      </dialog>`;
+
+/**
+ * Crea el modal de resultat sense obrir-lo ni incloure dades d'usuari al marcatge.
+ * @param {HTMLElement} contenidor Contenidor on s'insereix el modal.
+ * @returns {HTMLElement} Modal o secció de resultat segons la versió de la pàgina.
+ */
+function crearModalResultat(contenidor) {
+  const plantilla = document.createElement('template');
+  plantilla.innerHTML = MARCATGE_RESULTAT;
+  let modal = plantilla.content.querySelector('dialog');
+  if (document.body.dataset.presentacio === 'pagina') {
+    const seccio = document.createElement('section');
+    for (const atribut of modal.attributes) seccio.setAttribute(atribut.name, atribut.value);
+    seccio.className = 'targeta result';
+    seccio.setAttribute('role', 'region');
+    seccio.append(...modal.childNodes);
+    modal = seccio;
+  }
+  contenidor.append(modal);
+  return modal;
+}
 
 /**
  * Insereix el formulari, el resultat i el catàleg dins del contenidor.
