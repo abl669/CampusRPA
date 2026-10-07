@@ -284,6 +284,19 @@ async function desarJustificantAmbEstat(matricula, estat) {
 }
 
 /**
+ * Afegeix o elimina un botó de paginació. Sense botó, el paginador de PAD detecta el final.
+ * @param {HTMLButtonElement} boto Botó de paginació.
+ * @param {string} idEspai Identificador del contenidor que reserva l'espai del botó.
+ * @param {boolean} disponible Si hi ha pàgina a la qual navegar.
+ * @returns {void}
+ */
+function mostrarBotoPaginacio(boto, idEspai, disponible) {
+  const espai = document.getElementById(idEspai);
+  if (disponible && !espai.contains(boto)) espai.append(boto);
+  else if (!disponible) boto.remove();
+}
+
+/**
  * Presenta l'historial amb cerca, filtre, paginació i justificants.
  * @returns {void}
  */
@@ -324,13 +337,15 @@ function iniciarHistorial() {
     }
     camp('history-empty').hidden = resultat.total !== 0;
     camp('history-page').textContent = `Pàgina ${pagina} de ${resultat.pagines} · ${resultat.total} matrícules`;
-    camp('history-previous').disabled = pagina === 1;
-    camp('history-next').disabled = pagina === resultat.pagines;
+    mostrarBotoPaginacio(botoAnterior, 'history-previous-slot', pagina > 1);
+    mostrarBotoPaginacio(botoSeguent, 'history-next-slot', pagina < resultat.pagines);
   };
+  const botoAnterior = camp('history-previous');
+  const botoSeguent = camp('history-next');
   camp('history-form').addEventListener('submit', esdeveniment => { esdeveniment.preventDefault(); pagina = 1; mostrar(); });
   for (const id of ['history-subject', 'history-size']) camp(id).addEventListener('change', () => { pagina = 1; mostrar(); });
-  camp('history-previous').addEventListener('click', () => { pagina -= 1; mostrar(); });
-  camp('history-next').addEventListener('click', () => { pagina += 1; mostrar(); });
+  botoAnterior.addEventListener('click', () => { pagina -= 1; mostrar(); });
+  botoSeguent.addEventListener('click', () => { pagina += 1; mostrar(); });
   camp('history-refresh').addEventListener('click', mostrar);
   window.addEventListener('storage', mostrar);
   mostrar();

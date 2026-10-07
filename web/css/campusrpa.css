@@ -43,7 +43,10 @@ input[aria-invalid="true"], select[aria-invalid="true"] { border: 2px solid var(
 .boto { display: inline-block; min-height: 46px; border: 0; border-radius: .5rem; padding: .7rem 1.1rem;
   background: var(--primari); color: white; font-weight: 700; text-decoration: none; }
 .boto:hover:not(:disabled) { background: #03444d; }
-.boto:disabled { opacity: .65; cursor: wait; }
+.boto:disabled { opacity: .65; cursor: not-allowed; }
+[aria-busy="true"] .boto:disabled { cursor: progress; }
+.espai-paginacio { display: inline-block; min-width: 7rem; }
+.espai-paginacio:last-of-type { text-align: right; }
 .boto.secundari { background: white; color: var(--primari); border: 1px solid var(--primari); }
 .accions { display: flex; flex-wrap: wrap; gap: .8rem; align-items: center; margin-top: 1.2rem; }
 .estat-consulta { font-size: .875rem; color: var(--secundari); }

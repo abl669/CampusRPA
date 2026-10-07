@@ -154,8 +154,15 @@ async function executarProvesIntegracioDidactica() {
         document.getElementById('history-size').value = '5';
         document.getElementById('history-form').requestSubmit();
         comprovar(document.querySelectorAll('#history-rows tr').length === 5, 'La primera pàgina hauria de tenir cinc files.');
+        comprovar(!document.getElementById('history-previous') && document.getElementById('history-next'),
+          'A la primera pàgina només hauria d’existir el botó Següent.');
         document.getElementById('history-next').click();
         comprovar(document.querySelectorAll('#history-rows tr').length === 3, 'La segona pàgina hauria de tenir tres files.');
+        comprovar(!document.getElementById('history-next') && document.getElementById('history-previous'),
+          'A l’última pàgina el botó Següent no hauria d’existir perquè el paginador s’aturi.');
+        document.getElementById('history-previous').click();
+        comprovar(document.querySelectorAll('#history-rows tr').length === 5 && document.getElementById('history-next'),
+          'Tornar enrere hauria de recuperar la primera pàgina i el botó Següent.');
         document.getElementById('history-search').value = 'anna';
         document.getElementById('history-form').requestSubmit();
         comprovar(document.querySelectorAll('#history-rows tr').length === 1 &&
