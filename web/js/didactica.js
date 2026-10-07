@@ -213,20 +213,74 @@ function generarJustificant(matricula) {
 }
 
 /**
- * Descarrega el justificant d'una matrícula existent amb un nom segur.
+ * Desa el justificant d'una matrícula existent. Obre el diàleg «Desa com a» quan el navegador
+ * l'admet (Chrome i Edge) i, si no, en fa una descàrrega automàtica amb un nom segur.
  * @param {object} matricula Matrícula de l'historial.
+ * @param {Function|null} selectorFitxers Selector de fitxers; per defecte, window.showSaveFilePicker. Null força la descàrrega automàtica.
+ * @returns {Promise<string>} 'desat', 'cancel·lat' o 'descarregat'.
+ */
+async function descarregarJustificant(matricula, selectorFitxers = window.showSaveFilePicker) {
+  if (!/^MAT-\d{6}$/.test(matricula.referencia)) throw new Error('Referència de matrícula invàlida.');
+  const nom = `Justificant-${matricula.referencia}.txt`;
+  const contingut = new Blob([generarJustificant(matricula)], { type: 'text/plain;charset=utf-8' });
+  if (typeof selectorFitxers !== 'function') {
+    descarregarAutomaticament(contingut, nom);
+    return 'descarregat';
+  }
+  let fitxer;
+  try {
+    fitxer = await selectorFitxers.call(window, {
+      suggestedName: nom,
+      types: [{ description: 'Justificant de text', accept: { 'text/plain': ['.txt'] } }]
+    });
+  } catch (error) {
+    if (error.name === 'AbortError') return 'cancel·lat';
+    throw error;
+  }
+  const escriptor = await fitxer.createWritable();
+  try {
+    await escriptor.write(contingut);
+  } finally {
+    await escriptor.close();
+  }
+  return 'desat';
+}
+
+/**
+ * Descarrega un contingut a la carpeta predeterminada del navegador.
+ * @param {Blob} contingut Contingut del fitxer.
+ * @param {string} nom Nom del fitxer.
  * @returns {void}
  */
-function descarregarJustificant(matricula) {
-  if (!/^MAT-\d{6}$/.test(matricula.referencia)) throw new Error('Referència de matrícula invàlida.');
-  const url = URL.createObjectURL(new Blob([generarJustificant(matricula)], { type: 'text/plain;charset=utf-8' }));
+function descarregarAutomaticament(contingut, nom) {
+  const url = URL.createObjectURL(contingut);
   const enllac = document.createElement('a');
   enllac.href = url;
-  enllac.download = `Justificant-${matricula.referencia}.txt`;
+  enllac.download = nom;
   document.body.append(enllac);
   enllac.click();
   enllac.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/**
+ * Desa el justificant i informa del resultat en un element d'estat accessible.
+ * @param {object} matricula Matrícula de l'historial.
+ * @param {HTMLElement} estat Element on es mostra el resultat.
+ * @returns {Promise<void>}
+ */
+async function desarJustificantAmbEstat(matricula, estat) {
+  const missatges = {
+    desat: `Justificant ${matricula.referencia} desat.`,
+    'cancel·lat': `S'ha cancel·lat el desament del justificant ${matricula.referencia}.`,
+    descarregat: `Descàrrega sol·licitada: ${matricula.referencia}. Comprova el fitxer al navegador.`
+  };
+  try {
+    estat.textContent = missatges[await descarregarJustificant(matricula)];
+  } catch (error) {
+    console.error("No s'ha pogut desar el justificant.", error);
+    estat.textContent = `No s'ha pogut desar el justificant ${matricula.referencia}. Torna-ho a provar.`;
+  }
 }
 
 /**
@@ -263,10 +317,7 @@ function iniciarHistorial() {
       boto.textContent = 'Descarregar';
       boto.setAttribute('aria-label', `Descarregar justificant ${matricula.referencia}`);
       boto.dataset.referencia = matricula.referencia;
-      boto.addEventListener('click', () => {
-        descarregarJustificant(matricula);
-        camp('history-status').textContent = `Descàrrega sol·licitada: ${matricula.referencia}. Comprova el fitxer al navegador.`;
-      });
+      boto.addEventListener('click', () => desarJustificantAmbEstat(matricula, camp('history-status')));
       cela.append(boto);
       fila.append(cela);
       camp('history-rows').append(fila);
@@ -401,5 +452,6 @@ function iniciarJustificant() {
     return;
   }
   document.getElementById('receipt-text').textContent = generarJustificant(matricula);
-  document.getElementById('receipt-download').addEventListener('click', () => descarregarJustificant(matricula));
+  document.getElementById('receipt-download').addEventListener('click',
+    () => desarJustificantAmbEstat(matricula, document.getElementById('receipt-status')));
 }

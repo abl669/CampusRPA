@@ -307,35 +307,78 @@ async function executarProvesIntegracioDidactica() {
 }
 
 /**
- * Verifica el nom, el contingut i l'enllaç de descàrrega sense crear fitxers al navegador.
- * @returns {Promise<object>} Resultat de la prova del justificant descarregable.
+ * Verifica el diàleg «Desa com a», la cancel·lació i la descàrrega alternativa sense crear fitxers.
+ * @returns {Promise<object>} Recompte i resultats de les proves del justificant.
  */
 async function executarProvaDescarrega() {
+  const resultats = [];
+  const comprovar = (condicio, missatge) => { if (!condicio) throw new Error(missatge); };
+  const prova = async (nom, accio) => {
+    try { await accio(); resultats.push({ nom, correcte: true }); }
+    catch (error) { console.error(`Ha fallat la prova ${nom}.`, error); resultats.push({ nom, correcte: false, error: error.message }); }
+  };
   const servei = new ServeiAcademic();
   servei.formalitzar('ALU001', 'Automatització RPA', '<script>text de prova</script>');
   const matricula = servei.getMatricules()[0];
-  let enllac = null;
-  const interceptar = esdeveniment => {
-    if (esdeveniment.target instanceof HTMLAnchorElement && esdeveniment.target.download) {
-      esdeveniment.preventDefault();
-      enllac = { nom: esdeveniment.target.download, url: esdeveniment.target.href };
-    }
+  const comprovarContingut = async blob => {
+    const text = await blob.text();
+    comprovar(text.includes('SENSE VALIDESA OFICIAL') && text.includes('RPA001') &&
+      text.includes('<script>text de prova</script>') && blob.type.includes('text/plain'),
+      'El contingut hauria de ser text pla, amb referència i sense execució de marcatge.');
   };
-  document.addEventListener('click', interceptar, true);
-  try {
-    descarregarJustificant(matricula);
-    if (!enllac || enllac.nom !== 'Justificant-MAT-000001.txt' || !enllac.url.startsWith('blob:')) {
-      throw new Error('L’enllaç hauria de tenir un nom segur i un URL local de tipus Blob.');
+
+  await prova('descarregarJustificant_ambSelectorDisponible_desaAlFitxerTriat', async () => {
+    let opcions = null;
+    let escrit = null;
+    let tancat = false;
+    const selector = async parametres => {
+      opcions = parametres;
+      return { createWritable: async () => ({
+        write: async contingut => { escrit = contingut; },
+        close: async () => { tancat = true; }
+      }) };
+    };
+    comprovar(await descarregarJustificant(matricula, selector) === 'desat', 'Hauria de retornar desat.');
+    comprovar(opcions.suggestedName === 'Justificant-MAT-000001.txt' &&
+      opcions.types[0].accept['text/plain'][0] === '.txt', 'Hauria de suggerir un nom segur de text.');
+    comprovar(tancat, 'Hauria de tancar el fitxer.');
+    await comprovarContingut(escrit);
+  });
+  await prova('descarregarJustificant_ambDialegCancellat_noDesaIRetornaCancellat', async () => {
+    const selector = async () => { throw new DOMException('Cancel·lat', 'AbortError'); };
+    comprovar(await descarregarJustificant(matricula, selector) === 'cancel·lat', 'Hauria de retornar cancel·lat.');
+  });
+  await prova('descarregarJustificant_ambErrorDelSelector_propagaError', async () => {
+    const selector = async () => { throw new DOMException('Denegat', 'NotAllowedError'); };
+    let rebutjat = false;
+    try { await descarregarJustificant(matricula, selector); } catch (error) { rebutjat = error.name === 'NotAllowedError'; }
+    comprovar(rebutjat, 'Hauria de propagar els errors que no són cancel·lacions.');
+  });
+  await prova('descarregarJustificant_senseSelector_descarregaAutomaticament', async () => {
+    let enllac = null;
+    const interceptar = esdeveniment => {
+      if (esdeveniment.target instanceof HTMLAnchorElement && esdeveniment.target.download) {
+        esdeveniment.preventDefault();
+        enllac = { nom: esdeveniment.target.download, url: esdeveniment.target.href };
+      }
+    };
+    document.addEventListener('click', interceptar, true);
+    try {
+      comprovar(await descarregarJustificant(matricula, null) === 'descarregat', 'Hauria de retornar descarregat.');
+      comprovar(enllac && enllac.nom === 'Justificant-MAT-000001.txt' && enllac.url.startsWith('blob:'),
+        'L’enllaç hauria de tenir un nom segur i un URL local de tipus Blob.');
+      await comprovarContingut(await (await fetch(enllac.url)).blob());
+    } finally {
+      document.removeEventListener('click', interceptar, true);
     }
-    const resposta = await fetch(enllac.url);
-    const text = await resposta.text();
-    if (!text.includes('SENSE VALIDESA OFICIAL') || !text.includes('RPA001') ||
-        !text.includes('<script>text de prova</script>') ||
-        !resposta.headers.get('content-type').includes('text/plain')) {
-      throw new Error('El contingut hauria de ser text pla, amb referència i sense execució de marcatge.');
-    }
-    return { correcte: true, nom: enllac.nom, tipus: resposta.headers.get('content-type') };
-  } finally {
-    document.removeEventListener('click', interceptar, true);
-  }
+  });
+  await prova('descarregarJustificant_ambReferenciaInvalida_rebutjaSenseObrirDialeg', async () => {
+    let obert = false;
+    let rebutjat = false;
+    try {
+      await descarregarJustificant({ ...matricula, referencia: '../x' }, async () => { obert = true; });
+    } catch (error) { rebutjat = true; }
+    comprovar(rebutjat && !obert, 'No hauria d’obrir el diàleg amb referències invàlides.');
+  });
+  return { total: resultats.length, correctes: resultats.filter(resultat => resultat.correcte).length, resultats };
 }
