@@ -7,7 +7,7 @@
 function iniciarPaginaDidactica() {
   try {
     const iniciadors = { historial: iniciarHistorial, docent: iniciarDocent,
-      laboratori: iniciarLaboratori, justificant: iniciarJustificant };
+      laboratori: iniciarLaboratori, justificant: iniciarJustificant, descarrega: iniciarDescarrega };
     const pagina = document.body.dataset.pagina;
     if (!Object.hasOwn(iniciadors, pagina)) throw new Error('Pàgina de pràctiques desconeguda.');
     iniciadors[pagina]();

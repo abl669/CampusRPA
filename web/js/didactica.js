@@ -223,13 +223,13 @@ function validarReferencia(referencia) {
 }
 
 /**
- * Construeix la URL pròpia que obre el justificant i el descarrega automàticament.
+ * Construeix la URL pròpia que descarrega el justificant sense mostrar-lo.
  * @param {string} referencia Referència de matrícula.
  * @returns {string} URL relativa de descàrrega.
  */
 function getUrlDescarregaJustificant(referencia) {
   validarReferencia(referencia);
-  return `Justificant.html?referencia=${encodeURIComponent(referencia)}&descarregar=1`;
+  return `Descarrega.html?referencia=${encodeURIComponent(referencia)}`;
 }
 
 /**
@@ -482,10 +482,8 @@ function iniciarLaboratori() {
  * @returns {void}
  */
 function iniciarJustificant() {
-  const parametres = new URLSearchParams(location.search);
-  const referencia = parametres.get('referencia');
-  const matricula = new ServeiAcademic(new MagatzemLocal(CLAU_DADES)).getMatricules()
-    .find(fila => fila.referencia === referencia);
+  const referencia = new URLSearchParams(location.search).get('referencia');
+  const matricula = cercarMatricula(referencia);
   if (!matricula) {
     document.getElementById('receipt-text').textContent = 'Matrícula no trobada. Torna a l’historial i selecciona una referència registrada.';
     document.getElementById('receipt-download').disabled = true;
@@ -494,8 +492,32 @@ function iniciarJustificant() {
   const estat = document.getElementById('receipt-status');
   document.getElementById('receipt-text').textContent = generarJustificant(matricula);
   document.getElementById('receipt-download').addEventListener('click', () => desarJustificantAmbEstat(matricula, estat));
-  // El diàleg «Desa com a» exigeix un clic de l'usuari; en obrir la URL es fa descàrrega directa.
-  if (parametres.get('descarregar') === '1') descarregarJustificantDirecte(matricula, estat);
+}
+
+/**
+ * Cerca una matrícula registrada per referència.
+ * @param {string|null} referencia Referència de matrícula.
+ * @returns {object|undefined} Matrícula trobada o undefined.
+ */
+function cercarMatricula(referencia) {
+  return new ServeiAcademic(new MagatzemLocal(CLAU_DADES)).getMatricules()
+    .find(fila => fila.referencia === referencia);
+}
+
+/**
+ * Descarrega el justificant indicat a la URL sense mostrar-lo i torna a la pàgina anterior.
+ * @param {number} esperaMs Temps abans de tornar perquè el navegador iniciï la descàrrega.
+ * @returns {Promise<void>}
+ */
+async function iniciarDescarrega(esperaMs = 800) {
+  const estat = document.getElementById('download-status');
+  const matricula = cercarMatricula(new URLSearchParams(location.search).get('referencia'));
+  if (!matricula) {
+    estat.textContent = 'Matrícula no trobada. Torna a l’historial i selecciona una referència registrada.';
+    return;
+  }
+  await descarregarJustificantDirecte(matricula, estat);
+  if (history.length > 1) setTimeout(() => history.back(), esperaMs);
 }
 
 /**

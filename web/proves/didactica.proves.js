@@ -55,7 +55,7 @@ function executarProvesDidactiques() {
       text.includes('Anna Ferrer') && text.includes('PY001'), 'El justificant hauria de contenir les dades reals de la simulació.');
   });
   prova('getUrlDescarregaJustificant_ambReferenciaValida_retornaUrlPropia', () => {
-    comprovar(getUrlDescarregaJustificant('MAT-000007') === 'Justificant.html?referencia=MAT-000007&descarregar=1',
+    comprovar(getUrlDescarregaJustificant('MAT-000007') === 'Descarrega.html?referencia=MAT-000007',
       'Hauria de generar la URL de descàrrega de la referència.');
   });
   prova('getUrlDescarregaJustificant_ambReferenciaInvalida_llancaError', () => {
@@ -181,7 +181,7 @@ async function executarProvesIntegracioDidactica() {
         comprovar(document.querySelector('#history-rows a').getAttribute('href') === 'Justificant.html?referencia=MAT-000001',
           'La previsualització hauria de referenciar la matrícula correcta.');
         const boto = document.querySelector('#history-rows a.accio-justificant');
-        comprovar(boto.getAttribute('href') === 'Justificant.html?referencia=MAT-000001&descarregar=1' &&
+        comprovar(boto.getAttribute('href') === 'Descarrega.html?referencia=MAT-000001' &&
           boto.textContent === 'Descarregar' &&
           boto.getAttribute('aria-label').includes('MAT-000001') && boto.getBoundingClientRect().height < 46,
           'La descàrrega hauria de ser un enllaç compacte, accessible i amb URL pròpia.');
