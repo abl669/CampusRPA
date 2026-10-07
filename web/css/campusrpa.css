@@ -13,12 +13,13 @@ a { color: var(--primari); }
 .salt:focus { top: 1rem; }
 .capcalera { background: #103c48; color: white; }
 .capcalera-interior, main, footer { max-width: 1080px; margin: auto; padding: 1.5rem; }
-.capcalera-interior { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; }
+.capcalera-interior { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 1rem; }
 .marca { font-size: 1.3rem; font-weight: 800; letter-spacing: -.03em; color: white; text-decoration: none; }
-.navegacio { display: flex; flex-wrap: wrap; gap: .4rem 1rem; align-items: center; }
-.navegacio a { color: white; }
-.navegacio a[aria-current="page"] { font-weight: 800; }
-.distintiu { font-size: .8rem; padding: .25rem .7rem; border: 1px solid #81a5af; border-radius: 2rem; }
+.navegacio { grid-column: 3; grid-row: 1; display: flex; flex-wrap: wrap; gap: .4rem 1rem; align-items: center; }
+.navegacio a { color: white; font-weight: 700; }
+.navegacio a[aria-current="page"] { text-decoration-thickness: 3px; text-underline-offset: .3em; }
+.distintiu { grid-column: 2; grid-row: 1; justify-self: start; max-width: 100%;
+  font-size: .8rem; padding: .25rem .7rem; border: 1px solid #81a5af; border-radius: 2rem; }
 .distintiu.escenari { border-color: #f0c463; color: #ffe2a3; }
 main { padding-top: 2.5rem; }
 h1, h2, h3, p { margin-top: 0; }
@@ -109,6 +110,15 @@ body[data-pagina="historial"] main { max-width: 1400px; }
 .registre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 350px; overflow-y: auto; font-size: .8rem; }
 .practica { display: grid; gap: 1rem; margin-top: 1.5rem; }
 @media (max-width: 780px) { .distribucio { grid-template-columns: 1fr; } }
+@media (max-width: 900px) {
+  .capcalera-interior { grid-template-columns: auto minmax(0, 1fr); }
+  .navegacio { grid-column: 2; justify-self: end; }
+  .distintiu { grid-column: 1 / -1; grid-row: 2; }
+}
+@media (max-width: 600px) {
+  .navegacio { grid-column: 1 / -1; grid-row: 2; justify-self: start; }
+  .distintiu { grid-row: 3; }
+}
 @media (max-width: 480px) {
   .grid, .row { grid-template-columns: 1fr; gap: .3rem; }
   .grid { gap: 1rem; }
