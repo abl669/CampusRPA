@@ -54,6 +54,17 @@ function executarProvesDidactiques() {
     comprovar(text.includes('SENSE VALIDESA OFICIAL') && text.includes('MAT-000001') &&
       text.includes('Anna Ferrer') && text.includes('PY001'), 'El justificant hauria de contenir les dades reals de la simulació.');
   });
+  prova('getUrlDescarregaJustificant_ambReferenciaValida_retornaUrlPropia', () => {
+    comprovar(getUrlDescarregaJustificant('MAT-000007') === 'Justificant.html?referencia=MAT-000007&descarregar=1',
+      'Hauria de generar la URL de descàrrega de la referència.');
+  });
+  prova('getUrlDescarregaJustificant_ambReferenciaInvalida_llancaError', () => {
+    for (const referencia of ['', 'MAT-1', 'MAT-000001&x=<script>', null]) {
+      let rebutjat = false;
+      try { getUrlDescarregaJustificant(referencia); } catch (error) { rebutjat = error instanceof Error; }
+      comprovar(rebutjat, `Hauria de rebutjar la referència «${referencia}».`);
+    }
+  });
   prova('formalitzar_ambControlsInvalids_noConsumeixPlaces', () => {
     const altre = new ServeiAcademic();
     const resultat = altre.formalitzar('ALU011', 'Power Automate', '', {
@@ -148,7 +159,7 @@ async function executarProvesIntegracioDidactica() {
       for (let numero = 1; numero <= 8; numero += 1) {
         servei.formalitzar(`ALU${String(numero).padStart(3, '0')}`, 'Programació Python');
       }
-      await prova('historial_ambVuitMatricules_mostraPaginacioICerca', () => {
+      await prova('historial_ambVuitMatricules_mostraPaginacioICerca', async () => {
         document.getElementById('history-search').value = '';
         document.getElementById('history-subject').value = '';
         document.getElementById('history-size').value = '5';
@@ -169,10 +180,25 @@ async function executarProvesIntegracioDidactica() {
           document.getElementById('history-rows').textContent.includes('Anna Ferrer'), 'La cerca hauria de retornar Anna Ferrer.');
         comprovar(document.querySelector('#history-rows a').getAttribute('href') === 'Justificant.html?referencia=MAT-000001',
           'La previsualització hauria de referenciar la matrícula correcta.');
-        const boto = document.querySelector('#history-rows button');
-        comprovar(boto.className === 'accio-justificant' && boto.textContent === 'Descarregar' &&
+        const boto = document.querySelector('#history-rows a.accio-justificant');
+        comprovar(boto.getAttribute('href') === 'Justificant.html?referencia=MAT-000001&descarregar=1' &&
+          boto.textContent === 'Descarregar' &&
           boto.getAttribute('aria-label').includes('MAT-000001') && boto.getBoundingClientRect().height < 46,
-          'La descàrrega hauria de ser compacta i accessible.');
+          'La descàrrega hauria de ser un enllaç compacte, accessible i amb URL pròpia.');
+        let nomDescarregat = null;
+        const interceptar = esdeveniment => {
+          if (esdeveniment.target instanceof HTMLAnchorElement && esdeveniment.target.download) {
+            esdeveniment.preventDefault();
+            nomDescarregat = esdeveniment.target.download;
+          }
+        };
+        document.addEventListener('click', interceptar, true);
+        const adreca = location.href;
+        try { boto.click(); } finally { document.removeEventListener('click', interceptar, true); }
+        await new Promise(resoldre => setTimeout(resoldre, 50));
+        comprovar(nomDescarregat === 'Justificant-MAT-000001.txt' && location.href === adreca &&
+          document.getElementById('history-status').textContent.includes('Descàrrega iniciada'),
+          'El clic hauria de descarregar sense sortir de l’historial.');
         comprovar(Array.from(document.querySelectorAll('#history-table th')).every(capcalera =>
           getComputedStyle(capcalera).whiteSpace === 'nowrap'), 'Les capçaleres haurien de mantenir-se en una línia.');
       });
@@ -375,6 +401,24 @@ async function executarProvaDescarrega() {
       comprovar(enllac && enllac.nom === 'Justificant-MAT-000001.txt' && enllac.url.startsWith('blob:'),
         'L’enllaç hauria de tenir un nom segur i un URL local de tipus Blob.');
       await comprovarContingut(await (await fetch(enllac.url)).blob());
+    } finally {
+      document.removeEventListener('click', interceptar, true);
+    }
+  });
+  await prova('descarregarJustificantDirecte_ambMatriculaValida_iniciaDescarregaSenseDialeg', async () => {
+    let nom = null;
+    const interceptar = esdeveniment => {
+      if (esdeveniment.target instanceof HTMLAnchorElement && esdeveniment.target.download) {
+        esdeveniment.preventDefault();
+        nom = esdeveniment.target.download;
+      }
+    };
+    const estat = document.createElement('p');
+    document.addEventListener('click', interceptar, true);
+    try {
+      await descarregarJustificantDirecte(matricula, estat);
+      comprovar(nom === 'Justificant-MAT-000001.txt' && estat.textContent.includes('Descàrrega iniciada'),
+        'Hauria de descarregar directament i informar de l’estat.');
     } finally {
       document.removeEventListener('click', interceptar, true);
     }

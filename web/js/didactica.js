@@ -213,6 +213,26 @@ function generarJustificant(matricula) {
 }
 
 /**
+ * Comprova que una referència tingui el format MAT-000000.
+ * @param {string} referencia Referència de matrícula.
+ * @returns {void}
+ * @throws {Error} Si la referència és invàlida.
+ */
+function validarReferencia(referencia) {
+  if (!/^MAT-\d{6}$/.test(referencia)) throw new Error('Referència de matrícula invàlida.');
+}
+
+/**
+ * Construeix la URL pròpia que obre el justificant i el descarrega automàticament.
+ * @param {string} referencia Referència de matrícula.
+ * @returns {string} URL relativa de descàrrega.
+ */
+function getUrlDescarregaJustificant(referencia) {
+  validarReferencia(referencia);
+  return `Justificant.html?referencia=${encodeURIComponent(referencia)}&descarregar=1`;
+}
+
+/**
  * Desa el justificant d'una matrícula existent. Obre el diàleg «Desa com a» quan el navegador
  * l'admet (Chrome i Edge) i, si no, en fa una descàrrega automàtica amb un nom segur.
  * @param {object} matricula Matrícula de l'historial.
@@ -220,7 +240,7 @@ function generarJustificant(matricula) {
  * @returns {Promise<string>} 'desat', 'cancel·lat' o 'descarregat'.
  */
 async function descarregarJustificant(matricula, selectorFitxers = window.showSaveFilePicker) {
-  if (!/^MAT-\d{6}$/.test(matricula.referencia)) throw new Error('Referència de matrícula invàlida.');
+  validarReferencia(matricula.referencia);
   const nom = `Justificant-${matricula.referencia}.txt`;
   const contingut = new Blob([generarJustificant(matricula)], { type: 'text/plain;charset=utf-8' });
   if (typeof selectorFitxers !== 'function') {
@@ -320,18 +340,22 @@ function iniciarHistorial() {
         fila.append(cela);
       }
       const cela = document.createElement('td');
-      const boto = document.createElement('button');
       const enllac = document.createElement('a');
       enllac.href = `Justificant.html?referencia=${encodeURIComponent(matricula.referencia)}`;
       enllac.textContent = 'Veure justificant';
-      cela.append(enllac, document.createElement('br'));
-      boto.className = 'accio-justificant';
-      boto.type = 'button';
-      boto.textContent = 'Descarregar';
-      boto.setAttribute('aria-label', `Descarregar justificant ${matricula.referencia}`);
-      boto.dataset.referencia = matricula.referencia;
-      boto.addEventListener('click', () => desarJustificantAmbEstat(matricula, camp('history-status')));
-      cela.append(boto);
+      const descarrega = document.createElement('a');
+      descarrega.className = 'accio-justificant';
+      descarrega.href = getUrlDescarregaJustificant(matricula.referencia);
+      descarrega.textContent = 'Descarregar';
+      descarrega.setAttribute('aria-label', `Descarregar justificant ${matricula.referencia}`);
+      descarrega.dataset.referencia = matricula.referencia;
+      // Clic normal: descàrrega sense sortir de l'historial; l'href es manté per a PAD i noves pestanyes.
+      descarrega.addEventListener('click', esdeveniment => {
+        if (esdeveniment.ctrlKey || esdeveniment.metaKey || esdeveniment.shiftKey || esdeveniment.button !== 0) return;
+        esdeveniment.preventDefault();
+        descarregarJustificantDirecte(matricula, camp('history-status'));
+      });
+      cela.append(enllac, document.createElement('br'), descarrega);
       fila.append(cela);
       camp('history-rows').append(fila);
     }
@@ -458,7 +482,8 @@ function iniciarLaboratori() {
  * @returns {void}
  */
 function iniciarJustificant() {
-  const referencia = new URLSearchParams(location.search).get('referencia');
+  const parametres = new URLSearchParams(location.search);
+  const referencia = parametres.get('referencia');
   const matricula = new ServeiAcademic(new MagatzemLocal(CLAU_DADES)).getMatricules()
     .find(fila => fila.referencia === referencia);
   if (!matricula) {
@@ -466,7 +491,25 @@ function iniciarJustificant() {
     document.getElementById('receipt-download').disabled = true;
     return;
   }
+  const estat = document.getElementById('receipt-status');
   document.getElementById('receipt-text').textContent = generarJustificant(matricula);
-  document.getElementById('receipt-download').addEventListener('click',
-    () => desarJustificantAmbEstat(matricula, document.getElementById('receipt-status')));
+  document.getElementById('receipt-download').addEventListener('click', () => desarJustificantAmbEstat(matricula, estat));
+  // El diàleg «Desa com a» exigeix un clic de l'usuari; en obrir la URL es fa descàrrega directa.
+  if (parametres.get('descarregar') === '1') descarregarJustificantDirecte(matricula, estat);
+}
+
+/**
+ * Descarrega el justificant sense diàleg i informa del resultat.
+ * @param {object} matricula Matrícula de l'historial.
+ * @param {HTMLElement} estat Element on es mostra el resultat.
+ * @returns {Promise<void>}
+ */
+async function descarregarJustificantDirecte(matricula, estat) {
+  try {
+    await descarregarJustificant(matricula, null);
+    estat.textContent = `Descàrrega iniciada: Justificant-${matricula.referencia}.txt.`;
+  } catch (error) {
+    console.error("No s'ha pogut descarregar el justificant.", error);
+    estat.textContent = `No s'ha pogut descarregar el justificant ${matricula.referencia}.`;
+  }
 }
