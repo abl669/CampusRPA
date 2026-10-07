@@ -114,6 +114,34 @@ async function executarProvesIntegracioDidactica() {
   const altresDades = altresClaus.map(clau => [clau, new MagatzemLocal(clau).llegir()]);
   try {
     const pagina = document.body.dataset.pagina;
+    await prova('capcalera_ambDistintiuVariable_mantePosicioDelsEnllacos', () => {
+      const capcalera = document.querySelector('.capcalera-interior');
+      const navegacio = capcalera.querySelector('.navegacio');
+      const distintiuOriginal = capcalera.querySelector('.distintiu');
+      const distintiu = distintiuOriginal || document.createElement('span');
+      const textOriginal = distintiu.textContent;
+      const posicions = () => Array.from(navegacio.querySelectorAll('a'), enllac => {
+        const rectangle = enllac.getBoundingClientRect();
+        return [rectangle.x, rectangle.y];
+      });
+      const abans = JSON.stringify(posicions());
+      comprovar(!navegacio.contains(distintiu), 'El distintiu hauria de quedar fora del menú.');
+      try {
+        distintiu.classList.add('distintiu');
+        capcalera.append(distintiu);
+        for (const text of ['Entorn de pràctiques', 'Escenari: consulta sense resposta', 'Escenari: confirmació perduda']) {
+          distintiu.textContent = text;
+          comprovar(JSON.stringify(posicions()) === abans, 'El text no hauria de desplaçar els enllaços.');
+        }
+        distintiu.remove();
+        comprovar(JSON.stringify(posicions()) === abans, 'Eliminar el distintiu no hauria de desplaçar el menú.');
+      } finally {
+        if (distintiuOriginal) {
+          distintiu.textContent = textOriginal;
+          capcalera.append(distintiu);
+        } else distintiu.remove();
+      }
+    });
     if (pagina === 'historial') {
       magatzemDades.esborrar();
       const servei = new ServeiAcademic(magatzemDades);
