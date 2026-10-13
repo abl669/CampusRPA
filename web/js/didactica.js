@@ -30,15 +30,17 @@ function registrarOperacioDidactica(operacio, clau, estat) {
 }
 
 /**
- * Crea un diàleg fictici sense credencials per practicar avisos o inici de sessió.
+ * Crea un diàleg fictici per practicar avisos o inici de sessió. L'inici de sessió només exigeix
+ * que l'usuari i la contrasenya estiguin informats; no s'autentica ni es desa cap credencial.
  * @param {string} id Identificador estable.
  * @param {string} titol Títol del diàleg.
  * @param {string} missatge Explicació de la pràctica.
  * @param {string} botoText Text del botó.
  * @param {Function} confirmar Acció en acceptar.
+ * @param {boolean} demanaCredencials Si cal informar un usuari i una contrasenya fictícies.
  * @returns {void}
  */
-function mostrarDialegDidactic(id, titol, missatge, botoText, confirmar) {
+function mostrarDialegDidactic(id, titol, missatge, botoText, confirmar, demanaCredencials = false) {
   if (document.getElementById(id)) return;
   const dialeg = document.createElement('dialog');
   dialeg.id = id;
@@ -49,20 +51,88 @@ function mostrarDialegDidactic(id, titol, missatge, botoText, confirmar) {
   dialeg.setAttribute('aria-labelledby', capcalera.id);
   const text = document.createElement('p');
   text.textContent = missatge;
+  const formulari = document.createElement('form');
+  formulari.noValidate = true;
+  if (demanaCredencials) {
+    dialeg.classList.add('modal-credencials');
+    formulari.className = 'formulari-credencials';
+  }
   const boto = document.createElement('button');
   boto.id = `${id}-button`;
   boto.className = 'boto';
+  boto.type = 'submit';
   boto.textContent = botoText;
-  boto.addEventListener('click', () => {
+  const camps = demanaCredencials ? crearCampsCredencials(id) : [];
+  formulari.addEventListener('submit', esdeveniment => {
+    esdeveniment.preventDefault();
+    if (!validarCampsCredencials(camps)) return;
     confirmar();
     dialeg.close();
     dialeg.remove();
     document.getElementById('student-input')?.focus();
   });
   dialeg.addEventListener('cancel', esdeveniment => esdeveniment.preventDefault());
-  dialeg.append(capcalera, text, boto);
+  formulari.append(...camps.map(camp => camp.grup), boto);
+  dialeg.append(capcalera, text, formulari);
   document.body.append(dialeg);
   dialeg.showModal();
+  camps[0]?.entrada.focus();
+}
+
+/**
+ * Crea els camps d'usuari i contrasenya fictícies d'un diàleg.
+ * @param {string} id Identificador del diàleg.
+ * @returns {Array<{entrada: HTMLInputElement, error: HTMLElement, grup: HTMLDivElement, nom: string}>} Camps creats.
+ */
+function crearCampsCredencials(id) {
+  return [['user', 'Usuari', 'text', 'username'], ['password', 'Contrasenya', 'password', 'off']].map(
+    ([sufix, etiqueta, tipus, autocompleta]) => {
+      const grup = document.createElement('div');
+      const nom = document.createElement('label');
+      const entrada = document.createElement('input');
+      const error = document.createElement('span');
+      entrada.id = `${id}-${sufix}`;
+      entrada.type = tipus;
+      entrada.autocomplete = autocompleta;
+      entrada.required = true;
+      entrada.setAttribute('aria-describedby', `${entrada.id}-error`);
+      nom.htmlFor = entrada.id;
+      nom.textContent = etiqueta;
+      error.id = `${entrada.id}-error`;
+      error.className = 'camp-error';
+      error.hidden = true;
+      entrada.addEventListener('input', () => marcarCampCredencial({ entrada, error, nom: etiqueta }, ''));
+      grup.append(nom, entrada, error);
+      return { entrada, error, grup, nom: etiqueta };
+    });
+}
+
+/**
+ * Mostra o neteja l'error d'un camp de credencials.
+ * @param {{entrada: HTMLInputElement, error: HTMLElement}} camp Camp a actualitzar.
+ * @param {string} missatge Missatge d'error; buit per netejar-lo.
+ * @returns {void}
+ */
+function marcarCampCredencial(camp, missatge) {
+  camp.error.textContent = missatge;
+  camp.error.hidden = missatge === '';
+  if (missatge) camp.entrada.setAttribute('aria-invalid', 'true'); else camp.entrada.removeAttribute('aria-invalid');
+}
+
+/**
+ * Valida que tots els camps de credencials estiguin informats i enfoca el primer buit.
+ * @param {Array<{entrada: HTMLInputElement, error: HTMLElement, nom: string}>} camps Camps del diàleg.
+ * @returns {boolean} Si tots els camps tenen valor.
+ */
+function validarCampsCredencials(camps) {
+  let primerInvalid = null;
+  for (const camp of camps) {
+    const buit = camp.entrada.value.trim() === '';
+    marcarCampCredencial(camp, buit ? `${camp.nom} és obligatori.` : '');
+    if (buit && !primerInvalid) primerInvalid = camp.entrada;
+  }
+  primerInvalid?.focus();
+  return primerInvalid === null;
 }
 
 /**
@@ -77,10 +147,10 @@ function comprovarSessioDidactica() {
   document.getElementById('notice-dialog')?.remove();
   if (typeof invalidarConsulta === 'function') invalidarConsulta();
   mostrarDialegDidactic('session-dialog', 'Sessió fictícia caducada',
-    'No introdueixis credencials. Renova la sessió i torna a consultar la sol·licitud.',
+    'La sessió ha caducat. Introdueix un usuari i una contrasenya fictícies (qualsevol valor) per renovar-la. No uses credencials reals.',
     'Iniciar sessió de prova', () => {
       new MagatzemLocal('campusrpa.sessio.v1').desar(Date.now() + config.segons * 1000);
-    });
+    }, true);
   registrarOperacioDidactica('sessió', '', 'caducada');
   return false;
 }

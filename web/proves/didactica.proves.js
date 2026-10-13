@@ -309,6 +309,24 @@ async function executarProvesIntegracioDidactica() {
         comprovar(document.getElementById('session-dialog').open && !document.getElementById('result-panel'),
           'La sessió caducada hauria d’impedir la consulta i obrir el diàleg.');
         document.getElementById('session-dialog-button').click();
+        comprovar(document.getElementById('session-dialog').open &&
+          document.getElementById('session-dialog-user').getAttribute('aria-invalid') === 'true' &&
+          document.getElementById('session-dialog-password').getAttribute('aria-invalid') === 'true',
+          'Sense usuari ni contrasenya, el diàleg hauria de continuar obert i marcar els dos camps.');
+        document.getElementById('session-dialog-user').value = 'alumne.prova';
+        document.getElementById('session-dialog-button').click();
+        comprovar(document.getElementById('session-dialog').open &&
+          !document.getElementById('session-dialog-user').hasAttribute('aria-invalid') &&
+          document.getElementById('session-dialog-password').getAttribute('aria-invalid') === 'true',
+          'Només hauria de quedar marcada la contrasenya buida.');
+        document.getElementById('session-dialog-password').value = '   ';
+        document.getElementById('session-dialog-button').click();
+        comprovar(document.getElementById('session-dialog'), 'Una contrasenya només d’espais no hauria de ser vàlida.');
+        document.getElementById('session-dialog-password').value = 'qualsevol';
+        document.getElementById('session-dialog-button').click();
+        comprovar(!document.getElementById('session-dialog'), 'Amb les dues credencials informades, el diàleg s’hauria de tancar.');
+        comprovar(!JSON.stringify({ ...localStorage }).includes('qualsevol') &&
+          !JSON.stringify({ ...localStorage }).includes('alumne.prova'), 'No s’haurien de desar les credencials.');
         consultarSollicitud();
         await esperar(() => !enCurs);
         comprovar(document.getElementById('result-panel').dataset.estat === 'resposta',
@@ -318,6 +336,8 @@ async function executarProvesIntegracioDidactica() {
         consultarSollicitud();
         comprovar(document.getElementById('session-dialog').open,
           'Una sessió expirada hauria de requerir una altra renovació.');
+        document.getElementById('session-dialog-user').value = 'a';
+        document.getElementById('session-dialog-password').value = 'b';
         document.getElementById('session-dialog-button').click();
         comprovar(new ServeiAcademic(magatzemDades).getMatricules().length === 1,
           'La renovació de sessió no hauria de registrar matrícules.');

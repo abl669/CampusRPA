@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CampusRPA | Repte de selectors</title>
+  <link rel="stylesheet" href="css/campusrpa.css">
+  <script defer src="js/repte.js"></script>
+</head>
+<body data-pagina="repte">
+<a class="salt" href="#contingut">Ves al contingut principal</a>
+<header class="capcalera"><div class="capcalera-interior">
+  <a class="marca" href="Matricula.html">CampusRPA</a>
+  <nav class="navegacio" aria-label="Navegació principal">
+    <a href="Matricula.html">Consulta</a><a href="Historial.html">Historial</a>
+    <a href="Docent.html">Docent</a>
+    <a href="escenaris.html">Escenaris</a>
+  </nav>
+</div></header>
+<main id="contingut">
+  <h1>Repte de selectors</h1>
+  <p class="subtitle">Pràctica aïllada: no modifica matrícules. Els identificadors i les classes canvien a cada càrrega;
+    cal localitzar els elements per text, estructura, atributs, iframe, Shadow DOM o imatge.</p>
+  <section class="targeta">
+    <h2>Missió</h2>
+    <ol>
+      <li>Llegeix la fitxa de l’<strong>alumne a processar</strong> (no la d’exemple).</li>
+      <li>Escriu el seu codi d’alumne al formulari.</li>
+      <li>Selecciona exactament la seva assignatura a la llista.</li>
+      <li>Busca a la taula la <strong>nota final</strong> d’aquest alumne i assignatura i escriu-la.</li>
+      <li>Marca la confirmació de dades correctes.</li>
+      <li>Escriu el codi de verificació de la imatge.</li>
+      <li>Prem el botó d’enviament correcte i llegeix el resultat.</li>
+    </ol>
+    <div class="accions">
+      <button id="repte-nou" class="boto secundari" type="button">Nou repte</button>
+      <span id="repte-llavor" class="estat-consulta"></span>
+    </div>
+    <details><summary>Pistes de detecció</summary>
+      <ul>
+        <li><strong>Fitxa i codi:</strong> no hi ha identificadors estables. Ancora’t al títol de la fitxa i a l’etiqueta
+          (p. ej. <code>dt:contains("Codi") + dd</code>). Hi ha un camp ocult amb la mateixa etiqueta: no l’omplis.</li>
+        <li><strong>Taula:</strong> apareix al cap d’uns segons i l’ordre de columnes i files canvia. Localitza la columna pel
+          seu encapçalament i la fila per codi <em>i</em> assignatura: l’alumne apareix dues vegades.</li>
+        <li><strong>Llista:</strong> no és un <code>select</code>. Les opcions (<code>[role="option"]</code>) només existeixen
+          mentre és oberta i hi ha noms semblants: compara el text exacte.</li>
+        <li><strong>Nota:</strong> el camp és dins d’un <code>iframe</code>; el selector ha d’incloure’l.</li>
+        <li><strong>Confirmació:</strong> la casella real és dins d’un Shadow DOM. Si l’eina no hi arriba, prova el teclat
+          o JavaScript. Hi ha una casella esquer amb un text semblant.</li>
+        <li><strong>Codi:</strong> és una imatge (<code>canvas</code>); el text no és al DOM. Cal OCR.</li>
+        <li><strong>Enviar:</strong> hi ha diversos botons «Enviar» ocults, desactivats o fora de pantalla.
+          Comprova tipus, estat i visibilitat.</li>
+      </ul>
+      <p class="ajuda">Per repetir el mateix repte: <code>?llavor=N</code> (1–999999). Per eliminar l’espera de la taula:
+        <code>?espera=0</code> (0–10 segons).</p>
+    </details>
+  </section>
+  <div data-zona-repte></div>
+</main>
+<footer>Repte de pràctiques sense efectes acadèmics.</footer>
+</body>
+</html>
